@@ -1,7 +1,6 @@
 package com.felixjhonata.trackney.home.view
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,16 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.InputChip
-import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -26,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -168,74 +161,13 @@ private fun BalanceDetailCard(
 @Composable
 private fun SectionTitle(
     title: String,
-    modifier: Modifier = Modifier,
-    textColor: Color = MaterialTheme.colorScheme.onSurface
+    modifier: Modifier = Modifier
 ) {
     Text(
         title,
         modifier = modifier,
-        style = MaterialTheme.typography.titleLarge,
-        color = textColor
+        style = MaterialTheme.typography.titleLarge
     )
-}
-
-@Composable
-private fun CategoryChip(
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    InputChip(
-        modifier = modifier,
-        selected = false,
-        onClick = {},
-        label = {
-            Text(
-                label,
-                modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        },
-        colors = InputChipDefaults.inputChipColors(
-            labelColor = MaterialTheme.colorScheme.onPrimary
-        )
-    )
-}
-
-@Composable
-private fun CategorySection(modifier: Modifier = Modifier) {
-    val categories = listOf(
-        "Food",
-        "Grocery",
-        "Utility",
-        "Other"
-    )
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        SectionTitle(
-            "Category",
-            modifier = Modifier.padding(horizontal = 18.dp),
-            textColor = MaterialTheme.colorScheme.onPrimary
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Spacer(Modifier.width(8.dp))
-            }
-
-            items(categories) {
-                CategoryChip(it)
-            }
-
-            item {
-                Spacer(Modifier.width(8.dp))
-            }
-        }
-    }
 }
 
 @Composable
@@ -267,16 +199,7 @@ fun HomePage(modifier: Modifier = Modifier) {
                         horizontal = 12.dp
                     )
                 )
-                Spacer(Modifier.height(12.dp))
-            }
-
-            item {
-                CategorySection(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(vertical = 18.dp)
-                )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(18.dp))
             }
 
             item {
