@@ -27,8 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.TransactionType
+import com.felixjhonata.trackney.shared.model.AddEditTransaction
+import com.felixjhonata.trackney.shared.model.Home
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 
 @Composable
@@ -176,7 +181,10 @@ private fun SectionTitle(
 }
 
 @Composable
-private fun TransactionTitle(modifier: Modifier = Modifier) {
+private fun TransactionTitle(
+    onAdd: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -187,7 +195,7 @@ private fun TransactionTitle(modifier: Modifier = Modifier) {
         )
 
         Button(
-            onClick = {}
+            onClick = onAdd
         ) {
             Icon(
                 painterResource(R.drawable.outline_add_24),
@@ -290,7 +298,10 @@ fun TransactionCard(
 }
 
 @Composable
-fun HomePage(modifier: Modifier = Modifier) {
+fun HomePage(
+    navBackStack: NavBackStack<NavKey>,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier
     ) { innerPadding ->
@@ -323,6 +334,7 @@ fun HomePage(modifier: Modifier = Modifier) {
 
             item {
                 TransactionTitle(
+                    { navBackStack.add(AddEditTransaction) },
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .fillMaxWidth()
@@ -431,6 +443,6 @@ fun HomePage(modifier: Modifier = Modifier) {
 @Composable
 private fun HomePagePreview() {
     TrackneyTheme {
-        HomePage()
+        HomePage(rememberNavBackStack(Home))
     }
 }
