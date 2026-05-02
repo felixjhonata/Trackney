@@ -1,4 +1,4 @@
-package com.felixjhonata.trackney.home.model
+package com.felixjhonata.trackney.shared.model
 
 enum class TransactionType {
     INCOME, EXPENSE

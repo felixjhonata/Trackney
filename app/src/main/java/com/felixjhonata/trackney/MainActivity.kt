@@ -16,7 +16,9 @@ import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
 import com.felixjhonata.trackney.shared.model.Home
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -32,7 +32,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
-import com.felixjhonata.trackney.home.model.TransactionType
+import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
 import com.felixjhonata.trackney.shared.model.Home
