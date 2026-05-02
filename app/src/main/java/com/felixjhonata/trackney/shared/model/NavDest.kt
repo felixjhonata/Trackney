@@ -7,4 +7,7 @@ import kotlinx.serialization.Serializable
 data object Home: NavKey
 
 @Serializable
-data object AddEditTransaction: NavKey
+data object AddTransaction: NavKey
+
+@Serializable
+data object EditTransaction: NavKey

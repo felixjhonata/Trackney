@@ -1,6 +1,7 @@
 package com.felixjhonata.trackney.home.view
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +33,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.TransactionType
-import com.felixjhonata.trackney.shared.model.AddEditTransaction
+import com.felixjhonata.trackney.shared.model.AddTransaction
+import com.felixjhonata.trackney.shared.model.EditTransaction
 import com.felixjhonata.trackney.shared.model.Home
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 
@@ -334,7 +336,7 @@ fun HomePage(
 
             item {
                 TransactionTitle(
-                    { navBackStack.add(AddEditTransaction) },
+                    { navBackStack.add(AddTransaction) },
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .fillMaxWidth()
@@ -364,7 +366,9 @@ fun HomePage(
                         start = 12.dp,
                         end = 12.dp,
                         bottom = 12.dp
-                    )
+                    ).clickable {
+                        navBackStack.add(EditTransaction)
+                    }
                 )
             }
 

@@ -1,4 +1,4 @@
-package com.felixjhonata.trackney.add_transaction.view
+package com.felixjhonata.trackney.add_edit_transaction.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,17 +13,22 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +36,46 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
+import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
+import com.felixjhonata.trackney.shared.model.Home
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopBar(
+    type: ModifyTransactionType,
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit
+) {
+    val modifyType = when (type) {
+        ModifyTransactionType.ADD -> "Add"
+        ModifyTransactionType.EDIT -> "Edit"
+    }
+
+    TopAppBar(
+        modifier = modifier,
+        title = { Text("$modifyType Transaction") },
+        navigationIcon = {
+            IconButton(
+                onClick = onBack
+            ) {
+                Icon(
+                    painterResource(R.drawable.outline_arrow_back_24),
+                    "back_icon"
+                )
+            }
+        }
+    )
+}
 
 @Composable
 private fun DatePickerSection(modifier: Modifier = Modifier) {
@@ -186,18 +225,61 @@ private fun NoteField(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FooterButton(modifier: Modifier = Modifier) {
-    Button(
-        modifier = modifier,
-        onClick = {}
-    ) {
-        Text("Add Transaction")
+private fun FooterButton(
+    type: ModifyTransactionType,
+    modifier: Modifier = Modifier
+) {
+    when (type) {
+        ModifyTransactionType.ADD -> {
+            Button(
+                modifier = modifier,
+                onClick = {}
+            ) {
+                Text("Add Transaction")
+            }
+        }
+
+        ModifyTransactionType.EDIT -> {
+            Column(modifier) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {},
+                    border = ButtonDefaults.outlinedButtonBorder().copy(
+                        brush = SolidColor(MaterialTheme.colorScheme.error)
+                    )
+                ) {
+                    Text(
+                        "Delete Transaction",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {}
+                ) {
+                    Text("Edit Transaction")
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun AddEditTransactionPage(modifier: Modifier = Modifier) {
-    Scaffold(modifier) { innerPadding ->
+fun AddEditTransactionPage(
+    type: ModifyTransactionType,
+    navBackStack: NavBackStack<NavKey>,
+    modifier: Modifier = Modifier
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopBar(
+                type
+            ) { navBackStack.removeLastOrNull() }
+
+        }
+    ) { innerPadding ->
         Column(
             Modifier.padding(innerPadding)
         ) {
@@ -233,6 +315,7 @@ fun AddEditTransactionPage(modifier: Modifier = Modifier) {
             Spacer(Modifier.weight(1f))
 
             FooterButton(
+                type = type,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth()
@@ -245,6 +328,9 @@ fun AddEditTransactionPage(modifier: Modifier = Modifier) {
 @Composable
 private fun AddEditTransactionPagePreview() {
     TrackneyTheme {
-        AddEditTransactionPage()
+        AddEditTransactionPage(
+            ModifyTransactionType.ADD,
+            rememberNavBackStack(Home)
+        )
     }
 }
