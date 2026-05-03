@@ -41,12 +41,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
-import com.felixjhonata.trackney.shared.model.Home
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -227,13 +223,14 @@ private fun NoteField(modifier: Modifier = Modifier) {
 @Composable
 private fun FooterButton(
     type: ModifyTransactionType,
+    onPrimaryButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (type) {
         ModifyTransactionType.ADD -> {
             Button(
                 modifier = modifier,
-                onClick = {}
+                onClick = onPrimaryButtonClick
             ) {
                 Text("Add Transaction")
             }
@@ -256,7 +253,7 @@ private fun FooterButton(
 
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {}
+                    onClick = onPrimaryButtonClick
                 ) {
                     Text("Edit Transaction")
                 }
@@ -266,17 +263,19 @@ private fun FooterButton(
 }
 
 @Composable
-fun AddEditTransactionPage(
+fun AddEditTransactionPageContent(
     type: ModifyTransactionType,
-    navBackStack: NavBackStack<NavKey>,
+    onBack: () -> Unit,
+    onPrimaryButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
             TopBar(
-                type
-            ) { navBackStack.removeLastOrNull() }
+                type,
+                onBack = onBack
+            )
 
         }
     ) { innerPadding ->
@@ -316,6 +315,7 @@ fun AddEditTransactionPage(
 
             FooterButton(
                 type = type,
+                onPrimaryButtonClick = onPrimaryButtonClick,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth()
@@ -328,9 +328,10 @@ fun AddEditTransactionPage(
 @Composable
 private fun AddEditTransactionPagePreview() {
     TrackneyTheme {
-        AddEditTransactionPage(
+        AddEditTransactionPageContent(
             ModifyTransactionType.ADD,
-            rememberNavBackStack(Home)
+            {},
+            {}
         )
     }
 }

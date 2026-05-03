@@ -30,12 +30,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.felixjhonata.trackney.R
-import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
-import com.felixjhonata.trackney.shared.model.Home
+import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 
 @Composable
@@ -300,8 +298,9 @@ fun TransactionCard(
 }
 
 @Composable
-fun HomePage(
-    navBackStack: NavBackStack<NavKey>,
+private fun HomePageContent(
+    toAdd: () -> Unit,
+    toEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -336,7 +335,7 @@ fun HomePage(
 
             item {
                 TransactionTitle(
-                    { navBackStack.add(AddTransaction) },
+                    toAdd,
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .fillMaxWidth()
@@ -362,13 +361,13 @@ fun HomePage(
                     "19:00",
                     "-Rp 150,000",
                     TransactionType.EXPENSE,
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
-                    ).clickable {
-                        navBackStack.add(EditTransaction)
-                    }
+                    modifier = Modifier
+                        .padding(
+                            start = 12.dp,
+                            end = 12.dp,
+                            bottom = 12.dp
+                        )
+                        .clickable(onClick = toEdit)
                 )
             }
 
@@ -443,10 +442,25 @@ fun HomePage(
     }
 }
 
+@Composable
+fun HomePage(
+    navBackStack: NavBackStack<NavKey>,
+    modifier: Modifier = Modifier
+) {
+    HomePageContent(
+        modifier = modifier,
+        toAdd = { navBackStack.add(AddTransaction) },
+        toEdit = { navBackStack.add(EditTransaction) }
+    )
+}
+
 @Preview
 @Composable
 private fun HomePagePreview() {
     TrackneyTheme {
-        HomePage(rememberNavBackStack(Home))
+        HomePageContent(
+            {},
+            {}
+        )
     }
 }

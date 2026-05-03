@@ -9,8 +9,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
-import com.felixjhonata.trackney.add_edit_transaction.view.AddEditTransactionPage
+import com.felixjhonata.trackney.add_edit_transaction.view.AddTransactionPage
+import com.felixjhonata.trackney.add_edit_transaction.view.EditTransactionPage
 import com.felixjhonata.trackney.home.view.HomePage
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
@@ -41,17 +41,11 @@ class MainActivity : ComponentActivity() {
                         }
 
                         entry<AddTransaction> {
-                            AddEditTransactionPage(
-                                ModifyTransactionType.ADD,
-                                navBackStack
-                            )
+                            AddTransactionPage(navBackStack)
                         }
 
                         entry<EditTransaction> {
-                            AddEditTransactionPage(
-                                ModifyTransactionType.EDIT,
-                                navBackStack
-                            )
+                            EditTransactionPage(navBackStack)
                         }
                     }
                 )

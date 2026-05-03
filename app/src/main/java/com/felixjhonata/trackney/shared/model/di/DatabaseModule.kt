@@ -1,7 +1,11 @@
 package com.felixjhonata.trackney.shared.model.di
 
+import android.content.ContentValues
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.felixjhonata.trackney.shared.model.database.TrackneyDatabase
 import dagger.Module
 import dagger.Provides
@@ -17,6 +21,46 @@ object DatabaseModule {
         @ApplicationContext applicationContext: Context
     ) = Room.databaseBuilder(
         applicationContext,
-        TrackneyDatabase::class.java, "trackney-database"
+        TrackneyDatabase::class.java,
+        "trackney-database"
+    ).addCallback(
+        object : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+
+                val categories = listOf(
+                    Triple(1, "Entertainment", "EXPENSE"),
+                    Triple(2, "Food", "EXPENSE"),
+                    Triple(3, "Grocery", "EXPENSE"),
+                    Triple(4, "Others", "EXPENSE"),
+                    Triple(5, "Others", "INCOME"),
+                    Triple(6, "Salary", "INCOME"),
+                    Triple(7, "Utility", "EXPENSE")
+                )
+
+                categories.forEach { (id, name, type) ->
+                    val values = ContentValues().apply {
+                        put("id", id)
+                        put("name", name)
+                        put("type", type)
+                    }
+                    db.insert(
+                        "categories",
+                        SQLiteDatabase.CONFLICT_IGNORE,
+                        values
+                    )
+                }
+            }
+        }
     ).build()
+
+    @Provides
+    fun provideCategoryDao(
+        database: TrackneyDatabase
+    ) = database.categoryDao()
+
+    @Provides
+    fun provideTransactionDao(
+        database: TrackneyDatabase
+    ) = database.transactionDao()
 }
