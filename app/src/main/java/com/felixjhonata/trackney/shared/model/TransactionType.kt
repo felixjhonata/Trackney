@@ -1,5 +1,5 @@
 package com.felixjhonata.trackney.shared.model
 
-enum class TransactionType {
-    INCOME, EXPENSE
+enum class TransactionType(val displayName: String) {
+    EXPENSE("Expense"), INCOME("Income")
 }

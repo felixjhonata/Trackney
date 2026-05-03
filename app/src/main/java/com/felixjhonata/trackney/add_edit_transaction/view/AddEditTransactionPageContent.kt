@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -30,10 +30,6 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -42,7 +38,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.felixjhonata.trackney.R
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
+import com.felixjhonata.trackney.shared.model.TransactionType
+import com.felixjhonata.trackney.shared.model.entity.Category
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +73,10 @@ private fun TopBar(
 }
 
 @Composable
-private fun DatePickerSection(modifier: Modifier = Modifier) {
+private fun DatePickerSection(
+    dateTime: String,
+    modifier: Modifier = Modifier
+) {
     OutlinedCard(modifier) {
         Row(
             modifier = Modifier.padding(
@@ -91,7 +93,7 @@ private fun DatePickerSection(modifier: Modifier = Modifier) {
             Spacer(Modifier.width(8.dp))
 
             Text(
-                "30 April 2026 | 19:00",
+                dateTime,
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -106,9 +108,10 @@ private fun DatePickerSection(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AmountField(modifier: Modifier = Modifier) {
-    var amountInput by remember { mutableStateOf("") }
-
+private fun AmountField(
+    amount: String,
+    modifier: Modifier = Modifier
+) {
     OutlinedCard(modifier) {
         Column(
             modifier = Modifier
@@ -131,8 +134,8 @@ private fun AmountField(modifier: Modifier = Modifier) {
 
                 BasicTextField(
                     modifier = Modifier.weight(1f),
-                    value = amountInput,
-                    onValueChange = { amountInput = it },
+                    value = amount,
+                    onValueChange = {},
                     textStyle = MaterialTheme.typography.headlineMedium,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
@@ -144,28 +147,33 @@ private fun AmountField(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TypeField(modifier: Modifier = Modifier) {
-    val options = listOf("Income", "Expense")
+private fun TypeField(
+    selectedType: TransactionType,
+    modifier: Modifier = Modifier
+) {
+    val options = TransactionType.entries
 
     SingleChoiceSegmentedButtonRow(modifier) {
-        options.forEachIndexed { index, string ->
+        options.forEach { type ->
             SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
+                    index = type.ordinal,
                     count = options.size
                 ),
                 onClick = {},
-                selected = index == 0,
-                label = { Text(string) }
+                selected = selectedType.ordinal == type.ordinal,
+                label = { Text(type.displayName) }
             )
         }
     }
 }
 
 @Composable
-private fun CategorySection(modifier: Modifier = Modifier) {
-    val categories = listOf("Food", "Utility", "Grocery", "Entertainment", "Others")
-
+private fun CategorySection(
+    categories: List<Category>,
+    selectedCategory: Category?,
+    modifier: Modifier = Modifier
+) {
     Text(
         "Category",
         modifier = modifier,
@@ -178,11 +186,11 @@ private fun CategorySection(modifier: Modifier = Modifier) {
             Spacer(Modifier.width(4.dp))
         }
 
-        itemsIndexed(categories) { index, category ->
+        items(categories) { category ->
             FilterChip(
-                selected = index == 0,
+                selected = selectedCategory?.id == category.id,
                 onClick = {},
-                label = { Text(category) }
+                label = { Text(category.name) }
             )
         }
 
@@ -193,7 +201,10 @@ private fun CategorySection(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NoteField(modifier: Modifier = Modifier) {
+private fun NoteField(
+    note: String,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
@@ -211,9 +222,10 @@ private fun NoteField(modifier: Modifier = Modifier) {
 
             BasicTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                value = note,
                 onValueChange = {},
                 textStyle = MaterialTheme.typography.bodySmall,
+                minLines = 4,
                 maxLines = 4
             )
         }
@@ -265,6 +277,7 @@ private fun FooterButton(
 @Composable
 fun AddEditTransactionPageContent(
     type: ModifyTransactionType,
+    uiState: AddEditTransactionUiState,
     onBack: () -> Unit,
     onPrimaryButtonClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -276,13 +289,13 @@ fun AddEditTransactionPageContent(
                 type,
                 onBack = onBack
             )
-
         }
     ) { innerPadding ->
         Column(
             Modifier.padding(innerPadding)
         ) {
             DatePickerSection(
+                uiState.dateTime,
                 modifier = Modifier.padding(
                     horizontal = 12.dp,
                     vertical = 8.dp
@@ -290,6 +303,7 @@ fun AddEditTransactionPageContent(
             )
 
             AmountField(
+                uiState.amount,
                 modifier = Modifier.padding(
                     horizontal = 12.dp
                 )
@@ -297,6 +311,7 @@ fun AddEditTransactionPageContent(
             Spacer(Modifier.height(8.dp))
 
             TypeField(
+                uiState.type,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth()
@@ -304,11 +319,14 @@ fun AddEditTransactionPageContent(
             Spacer(Modifier.height(12.dp))
 
             CategorySection(
+                uiState.categories,
+                uiState.category,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
             Spacer(Modifier.height(8.dp))
 
             NoteField(
+                uiState.note,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
             Spacer(Modifier.weight(1f))
@@ -327,9 +345,51 @@ fun AddEditTransactionPageContent(
 @Preview
 @Composable
 private fun AddEditTransactionPagePreview() {
+    val categories = listOf(
+        Category(
+            0,
+            "Food",
+            TransactionType.EXPENSE
+        ),
+        Category(
+            1,
+            "Utility",
+            TransactionType.EXPENSE
+        ),
+        Category(
+            2,
+            "Grocery",
+            TransactionType.EXPENSE
+        ),
+        Category(
+            3,
+            "Entertainment",
+            TransactionType.EXPENSE
+        ),
+        Category(
+            4,
+            "Others",
+            TransactionType.EXPENSE
+        )
+    )
+
     TrackneyTheme {
         AddEditTransactionPageContent(
             ModifyTransactionType.ADD,
+            AddEditTransactionUiState(
+                "30 April 2026 | 19:00",
+                "12,000,000",
+                TransactionType.EXPENSE,
+                categories,
+                categories.first(),
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
+                        "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
+                        "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut " +
+                        "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit " +
+                        "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur " +
+                        "sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt " +
+                        "mollit anim id est laborum."
+            ),
             {},
             {}
         )

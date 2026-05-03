@@ -32,10 +32,10 @@ object DatabaseModule {
                     Triple(1, "Entertainment", "EXPENSE"),
                     Triple(2, "Food", "EXPENSE"),
                     Triple(3, "Grocery", "EXPENSE"),
-                    Triple(4, "Others", "EXPENSE"),
-                    Triple(5, "Others", "INCOME"),
-                    Triple(6, "Salary", "INCOME"),
-                    Triple(7, "Utility", "EXPENSE")
+                    Triple(4, "Salary", "INCOME"),
+                    Triple(5, "Utility", "EXPENSE"),
+                    Triple(6, "Others", "EXPENSE"),
+                    Triple(7, "Others", "INCOME")
                 )
 
                 categories.forEach { (id, name, type) ->
