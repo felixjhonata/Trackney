@@ -15,7 +15,6 @@ fun EditTransactionPage(
     AddEditTransactionPageContent(
         ModifyTransactionType.EDIT,
         AddEditTransactionUiState(),
-        { navBackStack.removeLastOrNull() },
         {},
         modifier = modifier
     )

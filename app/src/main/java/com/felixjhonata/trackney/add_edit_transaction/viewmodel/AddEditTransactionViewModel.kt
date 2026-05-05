@@ -2,13 +2,17 @@ package com.felixjhonata.trackney.add_edit_transaction.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.entity.Category
 import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.CategoryRepository
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -38,6 +42,9 @@ class AddEditTransactionViewModel @Inject constructor(
     )
     val uiState = _uiState.asStateFlow()
 
+    private val _uiEvent = MutableSharedFlow<AddEditTransactionUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     init {
         viewModelScope.launch {
             categories = categoryRepository.getCategories()
@@ -48,6 +55,27 @@ class AddEditTransactionViewModel @Inject constructor(
                         category.type == uiState.value.type
                     }
                 )
+            }
+        }
+    }
+
+    private fun onBack() {
+        viewModelScope.launch {
+            _uiEvent.emit(AddEditTransactionUiEvent.NavigateBack)
+        }
+    }
+
+    fun onUserEvent(event: AddEditTransactionUserEvent) {
+        when(event) {
+            AddEditTransactionUserEvent.BackPressed -> onBack()
+            AddEditTransactionUserEvent.AddTransactionButtonPressed -> {
+
+            }
+            AddEditTransactionUserEvent.EditTransactionButtonPressed -> {
+
+            }
+            AddEditTransactionUserEvent.DeleteTransactionButtonPressed -> {
+
             }
         }
     }

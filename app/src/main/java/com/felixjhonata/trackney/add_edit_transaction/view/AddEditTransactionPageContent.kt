@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.entity.Category
@@ -278,8 +279,7 @@ private fun FooterButton(
 fun AddEditTransactionPageContent(
     type: ModifyTransactionType,
     uiState: AddEditTransactionUiState,
-    onBack: () -> Unit,
-    onPrimaryButtonClick: () -> Unit,
+    onUserEvent: (AddEditTransactionUserEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -287,7 +287,9 @@ fun AddEditTransactionPageContent(
         topBar = {
             TopBar(
                 type,
-                onBack = onBack
+                onBack = {
+                    onUserEvent(AddEditTransactionUserEvent.BackPressed)
+                }
             )
         }
     ) { innerPadding ->
@@ -333,7 +335,15 @@ fun AddEditTransactionPageContent(
 
             FooterButton(
                 type = type,
-                onPrimaryButtonClick = onPrimaryButtonClick,
+                onPrimaryButtonClick = {
+                    val event = if (type == ModifyTransactionType.ADD) {
+                        AddEditTransactionUserEvent.AddTransactionButtonPressed
+                    } else {
+                        AddEditTransactionUserEvent.EditTransactionButtonPressed
+                    }
+
+                    onUserEvent(event)
+                },
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth()
@@ -390,7 +400,6 @@ private fun AddEditTransactionPagePreview() {
                         "sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt " +
                         "mollit anim id est laborum."
             ),
-            {},
             {}
         )
     }
