@@ -4,6 +4,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
@@ -102,7 +103,7 @@ class AddEditTransactionViewModel @Inject constructor(
             is AddEditTransactionUserEvent.ChangeSelectedCategory -> {
                 _uiState.update {
                     it.copy(
-                        category = event.category
+                        selectedCategory = event.category
                     )
                 }
             }
@@ -110,6 +111,35 @@ class AddEditTransactionViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         note = event.note
+                    )
+                }
+            }
+            AddEditTransactionUserEvent.DismissDialog -> {
+                _uiState.update {
+                    it.copy(dialog = AddEditTransactionDialog.None)
+                }
+            }
+            AddEditTransactionUserEvent.ShowDatePickerDialog -> {
+                _uiState.update {
+                    it.copy(dialog = AddEditTransactionDialog.DatePickerDialog)
+                }
+            }
+            is AddEditTransactionUserEvent.ShowTimePickerDialog -> {
+                _uiState.update {
+                    it.copy(
+                        dialog = AddEditTransactionDialog.TimePickerDialog(
+                            event.selectedDate
+                        )
+                    )
+                }
+            }
+            is AddEditTransactionUserEvent.ChangeDateTime -> {
+                val selectedDateTime = event.selectedDateTime
+                _uiState.update {
+                    it.copy(
+                        dateTime = formatter.format(selectedDateTime),
+                        selectedLocalDateTime = selectedDateTime,
+                        dialog = AddEditTransactionDialog.None
                     )
                 }
             }
@@ -127,7 +157,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 categories = categories.filter { category ->
                     category.type == type
                 },
-                category = null
+                selectedCategory = null
             )
         }
     }

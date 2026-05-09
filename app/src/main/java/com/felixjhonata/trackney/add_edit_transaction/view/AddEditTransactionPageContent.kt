@@ -1,5 +1,6 @@
 package com.felixjhonata.trackney.add_edit_transaction.view
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -28,7 +31,11 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,12 +46,18 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.felixjhonata.trackney.R
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.entity.Category
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -281,6 +294,78 @@ private fun FooterButton(
 }
 
 @Composable
+fun DateDialog(
+    initialSelectedDate: Long,
+    onDismiss: () -> Unit,
+    showTimePicker: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDate
+    )
+
+    DatePickerDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    val selectedDateMillis = datePickerState.selectedDateMillis ?: 0
+
+                    showTimePicker(
+                        Instant.ofEpochMilli(
+                            selectedDateMillis
+                        ).atOffset(
+                            ZoneOffset.UTC
+                        ).toLocalDate()
+                    )
+                }
+            ) {
+                Text("Next")
+            }
+        }
+    ) {
+        DatePicker(datePickerState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeDialog(
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onDone: (LocalTime) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour,
+        initialMinute
+    )
+    TimePickerDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    onDone(
+                        LocalTime.of(
+                            timePickerState.hour,
+                            timePickerState.minute
+                        )
+                    )
+                }
+            ) {
+                Text("Done")
+            }
+        },
+        title = { Text("Select time") }
+    ) {
+        TimePicker(timePickerState)
+    }
+}
+
+@Composable
 fun AddEditTransactionPageContent(
     type: ModifyTransactionType,
     uiState: AddEditTransactionUiState,
@@ -298,15 +383,55 @@ fun AddEditTransactionPageContent(
             )
         }
     ) { innerPadding ->
+        when (uiState.dialog) {
+            AddEditTransactionDialog.None -> Unit
+            AddEditTransactionDialog.DatePickerDialog -> {
+                DateDialog(
+                    initialSelectedDate = uiState.selectedLocalDateTime.toLocalDate().atStartOfDay(
+                        ZoneOffset.UTC
+                    ).toInstant().toEpochMilli(),
+                    onDismiss = { onUserEvent(AddEditTransactionUserEvent.DismissDialog) },
+                    showTimePicker = { localDate ->
+                        onUserEvent(
+                            AddEditTransactionUserEvent.ShowTimePickerDialog(
+                                localDate
+                            )
+                        )
+                    }
+                )
+            }
+            is AddEditTransactionDialog.TimePickerDialog -> {
+                TimeDialog(
+                    uiState.selectedLocalDateTime.hour,
+                    uiState.selectedLocalDateTime.minute,
+                    onDismiss = { onUserEvent(AddEditTransactionUserEvent.DismissDialog) },
+                    onDone = { selectedTime ->
+                        onUserEvent(
+                            AddEditTransactionUserEvent.ChangeDateTime(
+                                LocalDateTime.of(
+                                    uiState.dialog.selectedDate,
+                                    selectedTime
+                                )
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
         Column(
             Modifier.padding(innerPadding)
         ) {
             DatePickerSection(
                 uiState.dateTime,
-                modifier = Modifier.padding(
-                    horizontal = 12.dp,
-                    vertical = 8.dp
-                )
+                modifier = Modifier
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 8.dp
+                    )
+                    .clickable {
+                        onUserEvent(AddEditTransactionUserEvent.ShowDatePickerDialog)
+                    }
             )
 
             AmountField(
@@ -339,7 +464,7 @@ fun AddEditTransactionPageContent(
 
             CategorySection(
                 uiState.categories,
-                uiState.category,
+                uiState.selectedCategory,
                 modifier = Modifier.padding(horizontal = 12.dp),
                 onSelectCategory = {
                     onUserEvent(
@@ -414,12 +539,12 @@ private fun AddEditTransactionPagePreview() {
         AddEditTransactionPageContent(
             ModifyTransactionType.ADD,
             AddEditTransactionUiState(
-                "30 April 2026 | 19:00",
-                TextFieldValue("12,000,000"),
-                TransactionType.EXPENSE,
-                categories,
-                categories.first(),
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
+                dateTime = "30 April 2026 | 19:00",
+                amount = TextFieldValue("12,000,000"),
+                type = TransactionType.EXPENSE,
+                categories = categories,
+                selectedCategory = categories.first(),
+                note = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
                         "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
                         "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut " +
                         "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit " +
