@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.felixjhonata.trackney.R
@@ -110,7 +111,8 @@ private fun DatePickerSection(
 
 @Composable
 private fun AmountField(
-    amount: String,
+    amount: TextFieldValue,
+    onAmountChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(modifier) {
@@ -136,7 +138,7 @@ private fun AmountField(
                 BasicTextField(
                     modifier = Modifier.weight(1f),
                     value = amount,
-                    onValueChange = {},
+                    onValueChange = onAmountChange,
                     textStyle = MaterialTheme.typography.headlineMedium,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
@@ -150,6 +152,7 @@ private fun AmountField(
 @Composable
 private fun TypeField(
     selectedType: TransactionType,
+    onSelectType: (TransactionType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val options = TransactionType.entries
@@ -161,7 +164,7 @@ private fun TypeField(
                     index = type.ordinal,
                     count = options.size
                 ),
-                onClick = {},
+                onClick = { onSelectType(type) },
                 selected = selectedType.ordinal == type.ordinal,
                 label = { Text(type.displayName) }
             )
@@ -173,6 +176,7 @@ private fun TypeField(
 private fun CategorySection(
     categories: List<Category>,
     selectedCategory: Category?,
+    onSelectCategory: (Category) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Text(
@@ -190,7 +194,7 @@ private fun CategorySection(
         items(categories) { category ->
             FilterChip(
                 selected = selectedCategory?.id == category.id,
-                onClick = {},
+                onClick = { onSelectCategory(category) },
                 label = { Text(category.name) }
             )
         }
@@ -204,6 +208,7 @@ private fun CategorySection(
 @Composable
 private fun NoteField(
     note: String,
+    onChangeNote: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -224,7 +229,7 @@ private fun NoteField(
             BasicTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = note,
-                onValueChange = {},
+                onValueChange = onChangeNote,
                 textStyle = MaterialTheme.typography.bodySmall,
                 minLines = 4,
                 maxLines = 4
@@ -308,7 +313,12 @@ fun AddEditTransactionPageContent(
                 uiState.amount,
                 modifier = Modifier.padding(
                     horizontal = 12.dp
-                )
+                ),
+                onAmountChange = {
+                    onUserEvent(
+                        AddEditTransactionUserEvent.ChangeAmount(it)
+                    )
+                }
             )
             Spacer(Modifier.height(8.dp))
 
@@ -316,20 +326,37 @@ fun AddEditTransactionPageContent(
                 uiState.type,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                onSelectType = {
+                    onUserEvent(
+                        AddEditTransactionUserEvent.ChangeTransactionType(
+                            it
+                        )
+                    )
+                }
             )
             Spacer(Modifier.height(12.dp))
 
             CategorySection(
                 uiState.categories,
                 uiState.category,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp),
+                onSelectCategory = {
+                    onUserEvent(
+                        AddEditTransactionUserEvent.ChangeSelectedCategory(it)
+                    )
+                }
             )
             Spacer(Modifier.height(8.dp))
 
             NoteField(
                 uiState.note,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp),
+                onChangeNote = {
+                    onUserEvent(
+                        AddEditTransactionUserEvent.ChangeNote(it)
+                    )
+                }
             )
             Spacer(Modifier.weight(1f))
 
@@ -388,7 +415,7 @@ private fun AddEditTransactionPagePreview() {
             ModifyTransactionType.ADD,
             AddEditTransactionUiState(
                 "30 April 2026 | 19:00",
-                "12,000,000",
+                TextFieldValue("12,000,000"),
                 TransactionType.EXPENSE,
                 categories,
                 categories.first(),
