@@ -9,9 +9,13 @@ import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUi
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.TransactionType
+import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.entity.Category
+import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.CategoryRepository
+import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -26,14 +30,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddEditTransactionViewModel @Inject constructor(
-    categoryRepository: CategoryRepository
+    categoryRepository: CategoryRepository,
+    private val transactionRepository: TransactionRepository,
+    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
 ): ViewModel() {
     private val formatter = DateTimeFormatter.ofPattern(
         "dd MMMM yyyy | HH:mm",
         Locale.getDefault()
     )
-
-    private var dateTime = LocalDateTime.now()
     private var amount = 0.0
         set(value) {
             val stringValue = formatNumber(value)
@@ -52,7 +56,7 @@ class AddEditTransactionViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         AddEditTransactionUiState(
-            dateTime = dateTime.format(formatter)
+            dateTime = LocalDateTime.now().format(formatter)
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -80,18 +84,51 @@ class AddEditTransactionViewModel @Inject constructor(
         }
     }
 
+    private fun formatNumber(number: Number): String {
+        return NumberFormat.getInstance(Locale.getDefault()).format(number)
+    }
+
+    private fun changeTransactionType(type: TransactionType) {
+        _uiState.update {
+            it.copy(
+                type = type,
+                categories = categories.filter { category ->
+                    category.type == type
+                },
+                selectedCategory = null
+            )
+        }
+    }
+
+    private fun showSnackbar(message: String) {
+        viewModelScope.launch {
+            _uiEvent.emit(AddEditTransactionUiEvent.ShowSnackbar(message))
+        }
+    }
+
+    private fun addTransaction() {
+        val uiStateValue = uiState.value
+
+        if (uiStateValue.selectedCategory == null) {
+            showSnackbar("Category isn't selected yet")
+            return
+        }
+
+        val newTransaction = Transaction(
+            dateTime = uiStateValue.selectedLocalDateTime,
+            amount = amount,
+            categoryId = uiStateValue.selectedCategory.id,
+            note = uiStateValue.note
+        )
+
+        viewModelScope.launch(ioDispatcher) {
+            transactionRepository.insertTransaction(newTransaction)
+            onBack()
+        }
+    }
+
     fun onUserEvent(event: AddEditTransactionUserEvent) {
         when(event) {
-            AddEditTransactionUserEvent.BackPressed -> onBack()
-            AddEditTransactionUserEvent.AddTransactionButtonPressed -> {
-                // todo implement add transaction operation
-            }
-            AddEditTransactionUserEvent.EditTransactionButtonPressed -> {
-                // todo implement edit transaction operation
-            }
-            AddEditTransactionUserEvent.DeleteTransactionButtonPressed -> {
-                // todo implement delete transaction operation
-            }
             is AddEditTransactionUserEvent.ChangeAmount -> {
                 amount = event.amount.text.filterNot {
                     it == ','
@@ -143,22 +180,14 @@ class AddEditTransactionViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    private fun formatNumber(number: Number): String {
-        return NumberFormat.getInstance(Locale.getDefault()).format(number)
-    }
-
-    private fun changeTransactionType(type: TransactionType) {
-        _uiState.update {
-            it.copy(
-                type = type,
-                categories = categories.filter { category ->
-                    category.type == type
-                },
-                selectedCategory = null
-            )
+            AddEditTransactionUserEvent.BackPressed -> onBack()
+            AddEditTransactionUserEvent.AddTransactionButtonPressed -> addTransaction()
+            AddEditTransactionUserEvent.EditTransactionButtonPressed -> {
+                // todo implement edit transaction operation
+            }
+            AddEditTransactionUserEvent.DeleteTransactionButtonPressed -> {
+                // todo implement delete transaction operation
+            }
         }
     }
 }

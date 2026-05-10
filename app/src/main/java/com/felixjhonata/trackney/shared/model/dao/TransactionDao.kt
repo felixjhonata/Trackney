@@ -7,5 +7,5 @@ import com.felixjhonata.trackney.shared.model.entity.Transaction
 @Dao
 interface TransactionDao {
     @Insert
-    fun insertTransaction(transaction: Transaction)
+    suspend fun insertTransaction(transaction: Transaction)
 }

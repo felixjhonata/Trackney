@@ -30,6 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
@@ -368,6 +370,7 @@ fun TimeDialog(
 @Composable
 fun AddEditTransactionPageContent(
     type: ModifyTransactionType,
+    snackbarHostState: SnackbarHostState,
     uiState: AddEditTransactionUiState,
     onUserEvent: (AddEditTransactionUserEvent) -> Unit,
     modifier: Modifier = Modifier
@@ -381,6 +384,9 @@ fun AddEditTransactionPageContent(
                     onUserEvent(AddEditTransactionUserEvent.BackPressed)
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
         }
     ) { innerPadding ->
         when (uiState.dialog) {
@@ -538,6 +544,7 @@ private fun AddEditTransactionPagePreview() {
     TrackneyTheme {
         AddEditTransactionPageContent(
             ModifyTransactionType.ADD,
+            SnackbarHostState(),
             AddEditTransactionUiState(
                 dateTime = "30 April 2026 | 19:00",
                 amount = TextFieldValue("12,000,000"),
