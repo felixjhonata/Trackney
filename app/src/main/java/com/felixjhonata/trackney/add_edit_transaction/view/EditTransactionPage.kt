@@ -13,14 +13,20 @@ import androidx.navigation3.runtime.NavKey
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.add_edit_transaction.viewmodel.EditTransactionViewModel
+import com.felixjhonata.trackney.shared.model.EditTransaction
 
 @Composable
 fun EditTransactionPage(
     navBackStack: NavBackStack<NavKey>,
+    key: EditTransaction,
     modifier: Modifier = Modifier,
     viewModel: EditTransactionViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key.transactionId) {
+        viewModel.setTransactionId(key.transactionId)
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(Unit) {

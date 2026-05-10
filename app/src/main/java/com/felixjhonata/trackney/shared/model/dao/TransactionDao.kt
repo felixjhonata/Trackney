@@ -1,9 +1,11 @@
 package com.felixjhonata.trackney.shared.model.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.felixjhonata.trackney.shared.model.TransactionWithCategory
 import com.felixjhonata.trackney.shared.model.entity.Transaction as TransactionEntity
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,16 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionDao {
     @Insert
     suspend fun insertTransaction(transaction: TransactionEntity)
+
+    @Update
+    suspend fun updateTransaction(transaction: TransactionEntity)
+
+    @Delete
+    suspend fun deleteTransaction(transaction: TransactionEntity)
+
+    @Transaction
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    suspend fun getTransactionWithCategoryById(id: Int): TransactionWithCategory?
 
     @Transaction
     @Query("SELECT * FROM transactions WHERE dateTime >= :start AND dateTime <= :end ORDER BY dateTime DESC")

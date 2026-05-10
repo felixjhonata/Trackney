@@ -397,7 +397,7 @@ fun HomePage(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 HomeUiEvent.NavigateToAdd -> navBackStack.add(AddTransaction)
-                is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction)
+                is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction(event.transactionId))
             }
         }
     }
