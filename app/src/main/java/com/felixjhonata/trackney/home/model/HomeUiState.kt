@@ -22,7 +22,8 @@ data class TransactionItemUiState(
     val category: String,
     val time: String,
     val amount: String,
-    val type: TransactionType
+    val type: TransactionType,
+    val note: String
 )
 
 sealed interface HomeUserEvent {
