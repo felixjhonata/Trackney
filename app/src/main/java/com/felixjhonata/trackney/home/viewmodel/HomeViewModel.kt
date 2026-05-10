@@ -27,6 +27,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -76,7 +77,7 @@ class HomeViewModel @Inject constructor(
                 TransactionGroup(
                     date = date.format(dateFormatter),
                     totalAmount = formatAmount(
-                        kotlin.math.abs(dayTotal),
+                        abs(dayTotal),
                         if (dayTotal >= 0) TransactionType.INCOME else TransactionType.EXPENSE
                     ),
                     totalAmountType = if (dayTotal >= 0) TransactionType.INCOME else TransactionType.EXPENSE,
