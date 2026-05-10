@@ -12,6 +12,7 @@ import com.felixjhonata.trackney.add_edit_transaction.model.AddTransactionUserEv
 import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.entity.Category
+import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.CategoryRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,9 +46,9 @@ abstract class AddEditTransactionViewModel(
 
             field = value
         }
-    private var categories: List<Category> = emptyList()
+    protected var categories: List<Category> = emptyList()
 
-    private val _uiState = MutableStateFlow(
+    protected val _uiState = MutableStateFlow(
         AddEditTransactionUiState(
             dateTime = LocalDateTime.now().format(formatter)
         )
@@ -96,6 +97,20 @@ abstract class AddEditTransactionViewModel(
     protected fun showSnackbar(message: String) {
         viewModelScope.launch {
             _uiEvent.emit(AddEditTransactionUiEvent.ShowSnackbar(message))
+        }
+    }
+
+    protected fun initializeState(transaction: Transaction, category: Category) {
+        amount = transaction.amount
+        _uiState.update {
+            it.copy(
+                dateTime = transaction.dateTime.format(formatter),
+                selectedLocalDateTime = transaction.dateTime,
+                type = category.type,
+                selectedCategory = category,
+                note = transaction.note,
+                categories = categories.filter { c -> c.type == category.type }
+            )
         }
     }
 
