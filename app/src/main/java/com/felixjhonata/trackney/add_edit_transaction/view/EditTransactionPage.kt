@@ -36,7 +36,10 @@ fun EditTransactionPage(
                     navBackStack.removeLastOrNull()
                 }
                 is AddEditTransactionUiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(uiEvent.message)
+                    snackbarHostState.showSnackbar(
+                        uiEvent.message,
+                        withDismissAction = true
+                    )
                 }
             }
         }
