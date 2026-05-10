@@ -2,10 +2,18 @@ package com.felixjhonata.trackney.shared.model.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import com.felixjhonata.trackney.shared.model.entity.Transaction
+import androidx.room.Query
+import androidx.room.Transaction
+import com.felixjhonata.trackney.shared.model.TransactionWithCategory
+import com.felixjhonata.trackney.shared.model.entity.Transaction as TransactionEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
     @Insert
-    suspend fun insertTransaction(transaction: Transaction)
+    suspend fun insertTransaction(transaction: TransactionEntity)
+
+    @Transaction
+    @Query("SELECT * FROM transactions WHERE dateTime >= :start AND dateTime <= :end ORDER BY dateTime DESC")
+    fun getTransactionsByDateRange(start: Long, end: Long): Flow<List<TransactionWithCategory>>
 }
