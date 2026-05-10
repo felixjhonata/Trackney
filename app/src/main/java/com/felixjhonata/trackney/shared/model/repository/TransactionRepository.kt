@@ -11,6 +11,18 @@ class TransactionRepository @Inject constructor(
         transaction: Transaction
     ) = transactionDao.insertTransaction(transaction)
 
+    suspend fun updateTransaction(
+        transaction: Transaction
+    ) = transactionDao.updateTransaction(transaction)
+
+    suspend fun deleteTransaction(
+        transaction: Transaction
+    ) = transactionDao.deleteTransaction(transaction)
+
+    suspend fun getTransactionWithCategoryById(
+        id: Int
+    ) = transactionDao.getTransactionWithCategoryById(id)
+
     fun getTransactionsByDateRange(start: Long, end: Long) =
         transactionDao.getTransactionsByDateRange(start, end)
 }

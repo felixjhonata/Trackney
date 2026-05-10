@@ -44,8 +44,8 @@ class MainActivity : ComponentActivity() {
                             AddTransactionPage(navBackStack)
                         }
 
-                        entry<EditTransaction> {
-                            EditTransactionPage(navBackStack)
+                        entry<EditTransaction> { key ->
+                            EditTransactionPage(navBackStack, key = key)
                         }
                     }
                 )
