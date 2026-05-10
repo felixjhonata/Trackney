@@ -86,7 +86,8 @@ class HomeViewModel @Inject constructor(
                             category = it.category.name,
                             time = it.transaction.dateTime.format(timeFormatter),
                             amount = formatAmount(it.transaction.amount, it.category.type),
-                            type = it.category.type
+                            type = it.category.type,
+                            note = it.transaction.note
                         )
                     }
                 )

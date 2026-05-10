@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -39,6 +40,8 @@ import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
 import com.felixjhonata.trackney.home.model.HomeUserEvent
+import com.felixjhonata.trackney.home.model.TransactionGroup
+import com.felixjhonata.trackney.home.model.TransactionItemUiState
 import com.felixjhonata.trackney.home.viewmodel.HomeViewModel
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
@@ -227,7 +230,7 @@ private fun DateCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Row(
@@ -258,6 +261,7 @@ fun TransactionCard(
     time: String,
     amount: String,
     type: TransactionType,
+    note: String,
     modifier: Modifier = Modifier
 ) {
     val iconSurfaceColor = when (type) {
@@ -265,42 +269,66 @@ fun TransactionCard(
         TransactionType.EXPENSE -> MaterialTheme.colorScheme.error
     }
 
-    OutlinedCard(modifier) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        OutlinedCard(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         ) {
-            Surface(
-                shape = CircleShape,
-                color = iconSurfaceColor
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painterResource(R.drawable.outline_attach_money_24),
-                    "dollar_icon",
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
+                Surface(
+                    shape = CircleShape,
+                    color = iconSurfaceColor
+                ) {
+                    Icon(
+                        painterResource(R.drawable.outline_attach_money_24),
+                        "dollar_icon",
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
 
-            Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(8.dp))
 
-            Column {
+                Column {
+                    Text(
+                        category,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        time,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(Modifier.weight(1f))
+
                 Text(
-                    category,
+                    amount,
                     style = MaterialTheme.typography.titleMedium
                 )
-                Text(
-                    time,
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
+        }
 
-            Spacer(Modifier.weight(1f))
-
+        if (note.isNotEmpty()) {
             Text(
-                amount,
-                style = MaterialTheme.typography.titleMedium
+                note,
+                modifier = Modifier.padding(
+                    vertical = 4.dp,
+                    horizontal = 16.dp
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -371,6 +399,7 @@ private fun HomePageContent(
                         transaction.time,
                         transaction.amount,
                         transaction.type,
+                        transaction.note,
                         modifier = Modifier
                             .padding(
                                 start = 12.dp,
@@ -414,7 +443,52 @@ fun HomePage(
 private fun HomePagePreview() {
     TrackneyTheme {
         HomePageContent(
-            uiState = HomeUiState(),
+            uiState = HomeUiState(
+                "April 2026",
+                "Rp12,000,000",
+                "Rp13,000,000",
+                "Rp1,000,000",
+                listOf(
+                    TransactionGroup(
+                        date = "10 May 2026",
+                        totalAmount = "Rp50.000",
+                        totalAmountType = TransactionType.EXPENSE,
+                        transactions = listOf(
+                            TransactionItemUiState(
+                                id = 1,
+                                category = "Food",
+                                time = "12:00",
+                                amount = "Rp30.000",
+                                type = TransactionType.EXPENSE,
+                                "McDonald"
+                            ),
+                            TransactionItemUiState(
+                                id = 2,
+                                category = "Transport",
+                                time = "13:00",
+                                amount = "Rp20.000",
+                                type = TransactionType.EXPENSE,
+                                "Transjakarta"
+                            )
+                        )
+                    ),
+                    TransactionGroup(
+                        date = "09 May 2026",
+                        totalAmount = "Rp100.000",
+                        totalAmountType = TransactionType.INCOME,
+                        transactions = listOf(
+                            TransactionItemUiState(
+                                id = 3,
+                                category = "Salary",
+                                time = "09:00",
+                                amount = "Rp100.000",
+                                type = TransactionType.INCOME,
+                                ""
+                            )
+                        )
+                    )
+                )
+            ),
             onUserEvent = {}
         )
     }
