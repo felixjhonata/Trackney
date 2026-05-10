@@ -242,7 +242,7 @@ private fun NoteField(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                "Note",
+                "Note (optional)",
                 style = MaterialTheme.typography.labelLarge
             )
 
