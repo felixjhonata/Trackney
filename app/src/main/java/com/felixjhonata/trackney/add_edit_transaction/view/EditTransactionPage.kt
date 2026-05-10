@@ -12,13 +12,13 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
-import com.felixjhonata.trackney.add_edit_transaction.viewmodel.AddEditTransactionViewModel
+import com.felixjhonata.trackney.add_edit_transaction.viewmodel.EditTransactionViewModel
 
 @Composable
 fun EditTransactionPage(
     navBackStack: NavBackStack<NavKey>,
     modifier: Modifier = Modifier,
-    viewModel: AddEditTransactionViewModel = hiltViewModel()
+    viewModel: EditTransactionViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 

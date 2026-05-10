@@ -8,14 +8,11 @@ import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDi
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.AddTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.TransactionType
-import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.entity.Category
-import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.CategoryRepository
-import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -26,19 +23,15 @@ import java.text.NumberFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
 
-@HiltViewModel
-class AddEditTransactionViewModel @Inject constructor(
-    categoryRepository: CategoryRepository,
-    private val transactionRepository: TransactionRepository,
-    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
+abstract class AddEditTransactionViewModel(
+    categoryRepository: CategoryRepository
 ): ViewModel() {
     private val formatter = DateTimeFormatter.ofPattern(
         "dd MMMM yyyy | HH:mm",
         Locale.getDefault()
     )
-    private var amount = 0.0
+    protected var amount = 0.0
         set(value) {
             val stringValue = formatNumber(value)
             _uiState.update {
@@ -78,7 +71,7 @@ class AddEditTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun onBack() {
+    protected fun onBack() {
         viewModelScope.launch {
             _uiEvent.emit(AddEditTransactionUiEvent.NavigateBack)
         }
@@ -100,32 +93,15 @@ class AddEditTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun showSnackbar(message: String) {
+    protected fun showSnackbar(message: String) {
         viewModelScope.launch {
             _uiEvent.emit(AddEditTransactionUiEvent.ShowSnackbar(message))
         }
     }
 
-    private fun addTransaction() {
-        val uiStateValue = uiState.value
+    protected open fun handleAddUserEvent(event: AddTransactionUserEvent) {}
 
-        if (uiStateValue.selectedCategory == null) {
-            showSnackbar("Category isn't selected yet")
-            return
-        }
-
-        val newTransaction = Transaction(
-            dateTime = uiStateValue.selectedLocalDateTime,
-            amount = amount,
-            categoryId = uiStateValue.selectedCategory.id,
-            note = uiStateValue.note
-        )
-
-        viewModelScope.launch(ioDispatcher) {
-            transactionRepository.insertTransaction(newTransaction)
-            onBack()
-        }
-    }
+    protected open fun handleEditUserEvent(event: EditTransactionUserEvent) {}
 
     fun onUserEvent(event: AddEditTransactionUserEvent) {
         when(event) {
@@ -181,13 +157,8 @@ class AddEditTransactionViewModel @Inject constructor(
                 }
             }
             AddEditTransactionUserEvent.BackPressed -> onBack()
-            AddEditTransactionUserEvent.AddTransactionButtonPressed -> addTransaction()
-            AddEditTransactionUserEvent.EditTransactionButtonPressed -> {
-                // todo implement edit transaction operation
-            }
-            AddEditTransactionUserEvent.DeleteTransactionButtonPressed -> {
-                // todo implement delete transaction operation
-            }
+            is AddTransactionUserEvent -> handleAddUserEvent(event)
+            is EditTransactionUserEvent -> handleEditUserEvent(event)
         }
     }
 }

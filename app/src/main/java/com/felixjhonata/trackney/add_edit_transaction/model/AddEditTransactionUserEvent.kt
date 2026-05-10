@@ -8,9 +8,6 @@ import java.time.LocalDateTime
 
 sealed interface AddEditTransactionUserEvent {
     object BackPressed: AddEditTransactionUserEvent
-    object AddTransactionButtonPressed: AddEditTransactionUserEvent
-    object EditTransactionButtonPressed: AddEditTransactionUserEvent
-    object DeleteTransactionButtonPressed: AddEditTransactionUserEvent
     data class ChangeAmount(val amount: TextFieldValue): AddEditTransactionUserEvent
     data class ChangeTransactionType(val type: TransactionType): AddEditTransactionUserEvent
     data class ChangeSelectedCategory(val category: Category): AddEditTransactionUserEvent

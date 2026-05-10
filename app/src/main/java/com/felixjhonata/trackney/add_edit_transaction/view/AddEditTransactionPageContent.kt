@@ -51,6 +51,8 @@ import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.AddTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.entity.Category
@@ -256,14 +258,15 @@ private fun NoteField(
 @Composable
 private fun FooterButton(
     type: ModifyTransactionType,
-    onPrimaryButtonClick: () -> Unit,
+    onAddEditButtonClick: () -> Unit,
+    onDeleteButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (type) {
         ModifyTransactionType.ADD -> {
             Button(
                 modifier = modifier,
-                onClick = onPrimaryButtonClick
+                onClick = onAddEditButtonClick
             ) {
                 Text("Add Transaction")
             }
@@ -273,7 +276,7 @@ private fun FooterButton(
             Column(modifier) {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {},
+                    onClick = onDeleteButtonClick,
                     border = ButtonDefaults.outlinedButtonBorder().copy(
                         brush = SolidColor(MaterialTheme.colorScheme.error)
                     )
@@ -286,7 +289,7 @@ private fun FooterButton(
 
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = onPrimaryButtonClick
+                    onClick = onAddEditButtonClick
                 ) {
                     Text("Edit Transaction")
                 }
@@ -493,14 +496,17 @@ fun AddEditTransactionPageContent(
 
             FooterButton(
                 type = type,
-                onPrimaryButtonClick = {
+                onAddEditButtonClick = {
                     val event = if (type == ModifyTransactionType.ADD) {
-                        AddEditTransactionUserEvent.AddTransactionButtonPressed
+                        AddTransactionUserEvent.AddTransactionButtonPressed
                     } else {
-                        AddEditTransactionUserEvent.EditTransactionButtonPressed
+                        EditTransactionUserEvent.EditTransactionButtonPressed
                     }
 
                     onUserEvent(event)
+                },
+                onDeleteButtonClick = {
+                    onUserEvent(EditTransactionUserEvent.DeleteTransactionButtonPressed)
                 },
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
