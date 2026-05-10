@@ -156,7 +156,10 @@ private fun AmountField(
                     modifier = Modifier.weight(1f),
                     value = amount,
                     onValueChange = onAmountChange,
-                    textStyle = MaterialTheme.typography.headlineMedium,
+                    textStyle = MaterialTheme.typography.headlineMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     )
@@ -247,7 +250,10 @@ private fun NoteField(
                 modifier = Modifier.fillMaxWidth(),
                 value = note,
                 onValueChange = onChangeNote,
-                textStyle = MaterialTheme.typography.bodySmall,
+                textStyle = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSecondaryContainer),
                 minLines = 4,
                 maxLines = 4
             )
