@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -23,14 +24,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.felixjhonata.trackney.R
+import com.felixjhonata.trackney.home.model.HomeUiEvent
+import com.felixjhonata.trackney.home.model.HomeUiState
+import com.felixjhonata.trackney.home.model.HomeUserEvent
+import com.felixjhonata.trackney.home.viewmodel.HomeViewModel
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
 import com.felixjhonata.trackney.shared.model.TransactionType
@@ -299,8 +308,8 @@ fun TransactionCard(
 
 @Composable
 private fun HomePageContent(
-    toAdd: () -> Unit,
-    toEdit: () -> Unit,
+    uiState: HomeUiState,
+    onUserEvent: (HomeUserEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -311,9 +320,9 @@ private fun HomePageContent(
         ) {
             item {
                 MonthPicker(
-                    "April 2026",
-                    {},
-                    {},
+                    uiState.selectedMonthYear,
+                    { onUserEvent(HomeUserEvent.PreviousMonth) },
+                    { onUserEvent(HomeUserEvent.NextMonth) },
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .fillMaxWidth()
@@ -323,9 +332,9 @@ private fun HomePageContent(
 
             item {
                 BalanceDetailCard(
-                    "Rp 12,000,000",
-                    "Rp 20,000,000",
-                    "Rp 3,000,000",
+                    uiState.totalBalance,
+                    uiState.totalIncome,
+                    uiState.totalExpense,
                     modifier = Modifier.padding(
                         horizontal = 12.dp
                     )
@@ -335,7 +344,7 @@ private fun HomePageContent(
 
             item {
                 TransactionTitle(
-                    toAdd,
+                    onAdd = { onUserEvent(HomeUserEvent.AddTransactionClicked) },
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .fillMaxWidth()
@@ -343,100 +352,34 @@ private fun HomePageContent(
                 Spacer(Modifier.height(12.dp))
             }
 
-            item {
-                DateCard(
-                    "28 April 2026",
-                    "+Rp 3,000,000",
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
-                    )
-                )
-            }
-
-            item {
-                TransactionCard(
-                    "Food",
-                    "19:00",
-                    "-Rp 150,000",
-                    TransactionType.EXPENSE,
-                    modifier = Modifier
-                        .padding(
+            uiState.groupedTransactions.forEach { group ->
+                item {
+                    DateCard(
+                        group.date,
+                        group.totalAmount,
+                        modifier = Modifier.padding(
                             start = 12.dp,
                             end = 12.dp,
                             bottom = 12.dp
                         )
-                        .clickable(onClick = toEdit)
-                )
-            }
-
-            item {
-                TransactionCard(
-                    "Food",
-                    "19:00",
-                    "-Rp 25,000",
-                    TransactionType.EXPENSE,
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
                     )
-                )
-            }
+                }
 
-            item {
-                TransactionCard(
-                    "Food",
-                    "19:00",
-                    "-Rp 25,000",
-                    TransactionType.EXPENSE,
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
+                items(group.transactions) { transaction ->
+                    TransactionCard(
+                        transaction.category,
+                        transaction.time,
+                        transaction.amount,
+                        transaction.type,
+                        modifier = Modifier
+                            .padding(
+                                start = 12.dp,
+                                end = 12.dp,
+                                bottom = 12.dp
+                            )
+                            .clickable { onUserEvent(HomeUserEvent.EditTransactionClicked(transaction.id)) }
                     )
-                )
-            }
-
-            item {
-                TransactionCard(
-                    "Salary",
-                    "19:00",
-                    "+Rp 3,200,000",
-                    TransactionType.INCOME,
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
-                    )
-                )
-            }
-
-            item {
-                DateCard(
-                    "27 April 2026",
-                    "-Rp 150,000",
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
-                    )
-                )
-            }
-
-            item {
-                TransactionCard(
-                    "Food",
-                    "19:00",
-                    "-Rp 150,000",
-                    TransactionType.EXPENSE,
-                    modifier = Modifier.padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp
-                    )
-                )
+                }
             }
         }
     }
@@ -445,12 +388,24 @@ private fun HomePageContent(
 @Composable
 fun HomePage(
     navBackStack: NavBackStack<NavKey>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                HomeUiEvent.NavigateToAdd -> navBackStack.add(AddTransaction)
+                is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction)
+            }
+        }
+    }
+
     HomePageContent(
-        modifier = modifier,
-        toAdd = { navBackStack.add(AddTransaction) },
-        toEdit = { navBackStack.add(EditTransaction) }
+        uiState = uiState,
+        onUserEvent = viewModel::onUserEvent,
+        modifier = modifier
     )
 }
 
@@ -459,8 +414,8 @@ fun HomePage(
 private fun HomePagePreview() {
     TrackneyTheme {
         HomePageContent(
-            {},
-            {}
+            uiState = HomeUiState(),
+            onUserEvent = {}
         )
     }
 }

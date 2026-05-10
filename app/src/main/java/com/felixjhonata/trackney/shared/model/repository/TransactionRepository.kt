@@ -10,4 +10,7 @@ class TransactionRepository @Inject constructor(
     suspend fun insertTransaction(
         transaction: Transaction
     ) = transactionDao.insertTransaction(transaction)
+
+    fun getTransactionsByDateRange(start: Long, end: Long) =
+        transactionDao.getTransactionsByDateRange(start, end)
 }
