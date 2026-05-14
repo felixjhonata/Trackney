@@ -1,6 +1,7 @@
 package com.felixjhonata.trackney.add_edit_transaction.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.AddTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.entity.Transaction
@@ -19,30 +20,38 @@ class AddTransactionViewModel @Inject constructor(
 ): AddEditTransactionViewModel(
     categoryRepository
 ) {
-    override fun handleAddUserEvent(event: AddTransactionUserEvent) {
-        when(event) {
-            AddTransactionUserEvent.AddTransactionButtonPressed -> addTransaction()
+    override fun handleChildrenUserEvent(event: AddEditTransactionUserEvent) {
+        (event as? AddTransactionUserEvent)?.let { addEvent ->
+            when(addEvent) {
+                AddTransactionUserEvent.AddTransactionButtonPressed -> addTransaction()
+            }
         }
     }
 
     private fun addTransaction() {
-        val uiStateValue = uiState.value
+        val error = checkField()
 
-        if (uiStateValue.selectedCategory == null) {
-            showSnackbar("Category isn't selected yet")
+        if (error != null) {
+            showSnackbar(error)
             return
         }
+
+        val uiStateValue = uiState.value
 
         val newTransaction = Transaction(
             dateTime = uiStateValue.selectedLocalDateTime,
             amount = amount,
-            categoryId = uiStateValue.selectedCategory.id,
+            categoryId = uiStateValue.selectedCategory!!.id,
             note = uiStateValue.note
         )
 
         viewModelScope.launch(ioDispatchers) {
-            transactionRepository.insertTransaction(newTransaction)
-            onBack()
+            try {
+                transactionRepository.insertTransaction(newTransaction)
+                onBack()
+            } catch (_: Exception) {
+                showSnackbar("Failed to add transaction")
+            }
         }
     }
 }

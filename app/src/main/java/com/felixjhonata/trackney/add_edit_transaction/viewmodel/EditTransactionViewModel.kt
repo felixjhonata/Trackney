@@ -1,6 +1,7 @@
 package com.felixjhonata.trackney.add_edit_transaction.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.entity.Transaction
@@ -34,15 +35,22 @@ class EditTransactionViewModel @Inject constructor(
 
     private fun editTransaction() {
         val transaction = currentTransaction ?: return
-        val selectedCategory = uiState.value.selectedCategory ?: return
-        
+        val error = checkField()
+
+        if (error != null) {
+            showSnackbar(error)
+            return
+        }
+
+        val uiStateValue = uiState.value
+
         viewModelScope.launch(ioDispatchers) {
             try {
                 transactionRepository.updateTransaction(
                     transaction.copy(
                         amount = amount,
-                        dateTime = uiState.value.selectedLocalDateTime,
-                        categoryId = selectedCategory.id,
+                        dateTime = uiStateValue.selectedLocalDateTime,
+                        categoryId = uiStateValue.selectedCategory?.id ?: transaction.categoryId,
                         note = uiState.value.note
                     )
                 )
@@ -66,10 +74,12 @@ class EditTransactionViewModel @Inject constructor(
         }
     }
 
-    override fun handleEditUserEvent(event: EditTransactionUserEvent) {
-        when(event) {
-            EditTransactionUserEvent.EditTransactionButtonPressed -> editTransaction()
-            EditTransactionUserEvent.DeleteTransactionButtonPressed -> deleteTransaction()
+    override fun handleChildrenUserEvent(event: AddEditTransactionUserEvent) {
+        (event as? EditTransactionUserEvent)?.let { editEvent ->
+            when(editEvent) {
+                EditTransactionUserEvent.EditTransactionButtonPressed -> editTransaction()
+                EditTransactionUserEvent.DeleteTransactionButtonPressed -> deleteTransaction()
+            }
         }
     }
 }

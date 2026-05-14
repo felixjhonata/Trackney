@@ -27,7 +27,7 @@ import java.util.Locale
 
 abstract class AddEditTransactionViewModel(
     categoryRepository: CategoryRepository
-): ViewModel() {
+) : ViewModel() {
     private val formatter = DateTimeFormatter.ofPattern(
         "dd MMMM yyyy | HH:mm",
         Locale.getDefault()
@@ -114,20 +114,26 @@ abstract class AddEditTransactionViewModel(
         }
     }
 
-    protected open fun handleAddUserEvent(event: AddTransactionUserEvent) {}
+    protected fun checkField() = when {
+        amount <= 0 -> "Amount should be more than 0"
+        uiState.value.selectedCategory == null -> "Category need to be selected"
+        else -> null
+    }
 
-    protected open fun handleEditUserEvent(event: EditTransactionUserEvent) {}
+    protected abstract fun handleChildrenUserEvent(event: AddEditTransactionUserEvent)
 
     fun onUserEvent(event: AddEditTransactionUserEvent) {
-        when(event) {
+        when (event) {
             is AddEditTransactionUserEvent.ChangeAmount -> {
                 amount = event.amount.text.filterNot {
                     it == ','
                 }.toDoubleOrNull() ?: 0.0
             }
+
             is AddEditTransactionUserEvent.ChangeTransactionType -> {
                 changeTransactionType(event.type)
             }
+
             is AddEditTransactionUserEvent.ChangeSelectedCategory -> {
                 _uiState.update {
                     it.copy(
@@ -135,6 +141,7 @@ abstract class AddEditTransactionViewModel(
                     )
                 }
             }
+
             is AddEditTransactionUserEvent.ChangeNote -> {
                 _uiState.update {
                     it.copy(
@@ -142,16 +149,19 @@ abstract class AddEditTransactionViewModel(
                     )
                 }
             }
+
             AddEditTransactionUserEvent.DismissDialog -> {
                 _uiState.update {
                     it.copy(dialog = AddEditTransactionDialog.None)
                 }
             }
+
             AddEditTransactionUserEvent.ShowDatePickerDialog -> {
                 _uiState.update {
                     it.copy(dialog = AddEditTransactionDialog.DatePickerDialog)
                 }
             }
+
             is AddEditTransactionUserEvent.ShowTimePickerDialog -> {
                 _uiState.update {
                     it.copy(
@@ -161,6 +171,7 @@ abstract class AddEditTransactionViewModel(
                     )
                 }
             }
+
             is AddEditTransactionUserEvent.ChangeDateTime -> {
                 val selectedDateTime = event.selectedDateTime
                 _uiState.update {
@@ -171,9 +182,10 @@ abstract class AddEditTransactionViewModel(
                     )
                 }
             }
+
             AddEditTransactionUserEvent.BackPressed -> onBack()
-            is AddTransactionUserEvent -> handleAddUserEvent(event)
-            is EditTransactionUserEvent -> handleEditUserEvent(event)
+            is AddTransactionUserEvent -> handleChildrenUserEvent(event)
+            is EditTransactionUserEvent -> handleChildrenUserEvent(event)
         }
     }
 }
