@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -52,6 +53,7 @@ import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDi
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiState
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.AddTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.shared.model.TransactionType
@@ -305,7 +307,7 @@ private fun FooterButton(
 }
 
 @Composable
-fun DateDialog(
+private fun DateDialog(
     initialSelectedDate: Long,
     onDismiss: () -> Unit,
     showTimePicker: (LocalDate) -> Unit,
@@ -342,7 +344,7 @@ fun DateDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeDialog(
+private fun TimeDialog(
     initialHour: Int,
     initialMinute: Int,
     onDismiss: () -> Unit,
@@ -374,6 +376,35 @@ fun TimeDialog(
     ) {
         TimePicker(timePickerState)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ConfirmDeleteTransactionDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Are you sure?")
+        },
+        text = {
+            Text("You are going to delete the transaction record permanently")
+        },
+        confirmButton = {
+            Button(onConfirm) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -430,6 +461,12 @@ fun AddEditTransactionPageContent(
                             )
                         )
                     }
+                )
+            }
+            EditTransactionDialog.ConfirmDeleteDialog -> {
+                ConfirmDeleteTransactionDialog(
+                    { onUserEvent(AddEditTransactionUserEvent.DismissDialog) },
+                    { onUserEvent(EditTransactionUserEvent.DeleteTransactionConfirmed) }
                 )
             }
         }

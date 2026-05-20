@@ -48,7 +48,7 @@ abstract class AddEditTransactionViewModel(
         }
     protected var categories: List<Category> = emptyList()
 
-    protected val _uiState = MutableStateFlow(
+    private val _uiState = MutableStateFlow(
         AddEditTransactionUiState(
             dateTime = LocalDateTime.now().format(formatter)
         )
@@ -120,6 +120,12 @@ abstract class AddEditTransactionViewModel(
         else -> null
     }
 
+    protected fun showDialog(dialog: AddEditTransactionDialog) {
+        _uiState.update {
+            it.copy(dialog = dialog)
+        }
+    }
+
     protected abstract fun handleChildrenUserEvent(event: AddEditTransactionUserEvent)
 
     fun onUserEvent(event: AddEditTransactionUserEvent) {
@@ -151,25 +157,19 @@ abstract class AddEditTransactionViewModel(
             }
 
             AddEditTransactionUserEvent.DismissDialog -> {
-                _uiState.update {
-                    it.copy(dialog = AddEditTransactionDialog.None)
-                }
+                showDialog(AddEditTransactionDialog.None)
             }
 
             AddEditTransactionUserEvent.ShowDatePickerDialog -> {
-                _uiState.update {
-                    it.copy(dialog = AddEditTransactionDialog.DatePickerDialog)
-                }
+                showDialog(AddEditTransactionDialog.DatePickerDialog)
             }
 
             is AddEditTransactionUserEvent.ShowTimePickerDialog -> {
-                _uiState.update {
-                    it.copy(
-                        dialog = AddEditTransactionDialog.TimePickerDialog(
-                            event.selectedDate
-                        )
+                showDialog(
+                    AddEditTransactionDialog.TimePickerDialog(
+                        event.selectedDate
                     )
-                }
+                )
             }
 
             is AddEditTransactionUserEvent.ChangeDateTime -> {
