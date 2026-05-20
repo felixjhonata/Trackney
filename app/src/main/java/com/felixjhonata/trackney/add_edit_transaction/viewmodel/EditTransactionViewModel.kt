@@ -78,6 +78,7 @@ class EditTransactionViewModel @Inject constructor(
     }
 
     private fun showConfirmDeleteDialog() {
+        if (currentTransaction == null) return
         showDialog(EditTransactionDialog.ConfirmDeleteDialog)
     }
 
