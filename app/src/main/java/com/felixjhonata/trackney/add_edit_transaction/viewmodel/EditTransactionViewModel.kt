@@ -1,7 +1,9 @@
 package com.felixjhonata.trackney.add_edit_transaction.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUserEvent
+import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionDialog
 import com.felixjhonata.trackney.add_edit_transaction.model.EditTransactionUserEvent
 import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.entity.Transaction
@@ -62,8 +64,9 @@ class EditTransactionViewModel @Inject constructor(
     }
 
     private fun deleteTransaction() {
+        showDialog(AddEditTransactionDialog.None)
         val transaction = currentTransaction ?: return
-        
+
         viewModelScope.launch(ioDispatchers) {
             try {
                 transactionRepository.deleteTransaction(transaction)
@@ -74,11 +77,16 @@ class EditTransactionViewModel @Inject constructor(
         }
     }
 
+    private fun showConfirmDeleteDialog() {
+        showDialog(EditTransactionDialog.ConfirmDeleteDialog)
+    }
+
     override fun handleChildrenUserEvent(event: AddEditTransactionUserEvent) {
         (event as? EditTransactionUserEvent)?.let { editEvent ->
             when(editEvent) {
                 EditTransactionUserEvent.EditTransactionButtonPressed -> editTransaction()
-                EditTransactionUserEvent.DeleteTransactionButtonPressed -> deleteTransaction()
+                EditTransactionUserEvent.DeleteTransactionButtonPressed -> showConfirmDeleteDialog()
+                EditTransactionUserEvent.DeleteTransactionConfirmed -> deleteTransaction()
             }
         }
     }
