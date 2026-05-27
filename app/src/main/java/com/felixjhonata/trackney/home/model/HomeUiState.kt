@@ -31,9 +31,11 @@ sealed interface HomeUserEvent {
     data object NextMonth : HomeUserEvent
     data object AddTransactionClicked : HomeUserEvent
     data class EditTransactionClicked(val transactionId: Int) : HomeUserEvent
+    data object SettingsClicked : HomeUserEvent
 }
 
 sealed interface HomeUiEvent {
     data object NavigateToAdd : HomeUiEvent
     data class NavigateToEdit(val transactionId: Int) : HomeUiEvent
+    data object NavigateToManageCategories : HomeUiEvent
 }

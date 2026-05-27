@@ -20,9 +20,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -334,6 +338,7 @@ fun TransactionCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomePageContent(
     uiState: HomeUiState,
@@ -341,7 +346,17 @@ private fun HomePageContent(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text("Trackney") },
+                actions = {
+                    IconButton(onClick = { onUserEvent(HomeUserEvent.SettingsClicked) }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Manage Categories")
+                    }
+                }
+            )
+        }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.padding(innerPadding)
@@ -427,6 +442,7 @@ fun HomePage(
             when (event) {
                 HomeUiEvent.NavigateToAdd -> navBackStack.add(AddTransaction)
                 is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction(event.transactionId))
+                HomeUiEvent.NavigateToManageCategories -> navBackStack.add(com.felixjhonata.trackney.shared.model.ManageCategories)
             }
         }
     }

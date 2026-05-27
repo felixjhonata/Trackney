@@ -130,6 +130,11 @@ class HomeViewModel @Inject constructor(
                     _uiEvent.emit(HomeUiEvent.NavigateToEdit(event.transactionId))
                 }
             }
+            HomeUserEvent.SettingsClicked -> {
+                viewModelScope.launch {
+                    _uiEvent.emit(HomeUiEvent.NavigateToManageCategories)
+                }
+            }
         }
     }
 }
