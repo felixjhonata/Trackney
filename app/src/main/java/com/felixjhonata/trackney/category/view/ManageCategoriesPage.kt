@@ -10,11 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -35,11 +30,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.category.model.ManageCategoriesUiEvent
 import com.felixjhonata.trackney.category.model.ManageCategoriesUiState
 import com.felixjhonata.trackney.category.model.ManageCategoriesUserEvent
@@ -85,7 +82,7 @@ fun ManageCategoriesPageContent(
                 title = { Text("Manage Categories") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(painterResource(R.drawable.outline_arrow_back_24), contentDescription = "Back")
                     }
                 }
             )
@@ -96,7 +93,7 @@ fun ManageCategoriesPageContent(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Category")
+                Icon(painterResource(R.drawable.outline_add_24), contentDescription = "Add Category")
             }
         }
     ) { innerPadding ->
@@ -158,10 +155,10 @@ fun CategoryCard(
             }
             Row {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
+                    Icon(painterResource(R.drawable.outline_edit_24), contentDescription = "Edit")
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(painterResource(R.drawable.outline_delete_24), contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

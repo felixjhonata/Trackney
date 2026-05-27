@@ -20,8 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -352,7 +350,7 @@ private fun HomePageContent(
                 title = { Text("Trackney") },
                 actions = {
                     IconButton(onClick = { onUserEvent(HomeUserEvent.SettingsClicked) }) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Manage Categories")
+                        Icon(painterResource(R.drawable.outline_settings_24), contentDescription = "Manage Categories")
                     }
                 }
             )
