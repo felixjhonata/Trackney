@@ -199,13 +199,22 @@ private fun CategorySection(
     categories: List<Category>,
     selectedCategory: Category?,
     onSelectCategory: (Category) -> Unit,
+    onManageCategories: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Text(
-        "Category",
-        modifier = modifier,
-        style = MaterialTheme.typography.titleMedium
-    )
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "Category",
+            style = MaterialTheme.typography.titleMedium
+        )
+        IconButton(onClick = onManageCategories) {
+            Icon(painterResource(R.drawable.outline_settings_24), contentDescription = "Manage Categories")
+        }
+    }
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -522,6 +531,9 @@ fun AddEditTransactionPageContent(
                     onUserEvent(
                         AddEditTransactionUserEvent.ChangeSelectedCategory(it)
                     )
+                },
+                onManageCategories = {
+                    onUserEvent(AddEditTransactionUserEvent.ManageCategoriesClicked)
                 }
             )
             Spacer(Modifier.height(8.dp))

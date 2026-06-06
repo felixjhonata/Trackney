@@ -183,6 +183,12 @@ abstract class AddEditTransactionViewModel(
                 }
             }
 
+            AddEditTransactionUserEvent.ManageCategoriesClicked -> {
+                viewModelScope.launch {
+                    _uiEvent.emit(AddEditTransactionUiEvent.NavigateToManageCategories)
+                }
+            }
+
             AddEditTransactionUserEvent.BackPressed -> onBack()
             is AddTransactionUserEvent -> handleChildrenUserEvent(event)
             is EditTransactionUserEvent -> handleChildrenUserEvent(event)

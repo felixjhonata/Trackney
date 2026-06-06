@@ -35,6 +35,9 @@ fun EditTransactionPage(
                 AddEditTransactionUiEvent.NavigateBack -> {
                     navBackStack.removeLastOrNull()
                 }
+                AddEditTransactionUiEvent.NavigateToManageCategories -> {
+                    navBackStack.add(com.felixjhonata.trackney.shared.model.ManageCategories)
+                }
                 is AddEditTransactionUiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         uiEvent.message,

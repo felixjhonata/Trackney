@@ -16,4 +16,5 @@ sealed interface AddEditTransactionUserEvent {
     object ShowDatePickerDialog: AddEditTransactionUserEvent
     data class ShowTimePickerDialog(val selectedDate: LocalDate): AddEditTransactionUserEvent
     data class ChangeDateTime(val selectedDateTime: LocalDateTime): AddEditTransactionUserEvent
+    object ManageCategoriesClicked: AddEditTransactionUserEvent
 }
