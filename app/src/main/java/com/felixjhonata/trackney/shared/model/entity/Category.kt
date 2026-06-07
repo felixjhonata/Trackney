@@ -6,7 +6,7 @@ import com.felixjhonata.trackney.shared.model.TransactionType
 
 @Entity("categories")
 data class Category(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val type: TransactionType
 )

@@ -31,18 +31,18 @@ object DatabaseModule {
                 super.onCreate(db)
 
                 val categories = listOf(
-                    Triple(1, "Entertainment", "EXPENSE"),
-                    Triple(2, "Food", "EXPENSE"),
-                    Triple(3, "Grocery", "EXPENSE"),
-                    Triple(4, "Salary", "INCOME"),
-                    Triple(5, "Utility", "EXPENSE"),
-                    Triple(6, "Others", "EXPENSE"),
-                    Triple(7, "Others", "INCOME")
+                    Pair("Entertainment", "EXPENSE"),
+                    Pair("Food", "EXPENSE"),
+                    Pair("Grocery", "EXPENSE"),
+                    Pair("Salary", "INCOME"),
+                    Pair("Transport", "EXPENSE"),
+                    Pair("Utility", "EXPENSE"),
+                    Pair("Others", "EXPENSE"),
+                    Pair("Others", "INCOME")
                 )
 
-                categories.forEach { (id, name, type) ->
+                categories.forEach { (name, type) ->
                     val values = ContentValues().apply {
-                        put("id", id)
                         put("name", name)
                         put("type", type)
                     }

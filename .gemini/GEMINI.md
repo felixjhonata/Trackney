@@ -104,4 +104,22 @@ fun FeatureScreen(
 
     FeatureContent(state = state, onUserEvent = viewModel::onUserEvent)
 }
-```</UIEvent>
+```
+
+## 8. GitHub Pull Request Review & Comments Protocol
+
+When asked to fetch or read unresolved comments/reviews on a pull request using the GitHub CLI (`gh`), follow this protocol:
+
+1. **Determine Repository Owner and Repo Name**:
+   Retrieve the repository information by running `gh pr view <number>` or checking git remote configurations if needed.
+
+2. **Query PR Review Threads via GraphQL API**:
+   To accurately retrieve the resolution status (`isResolved`) of comment threads, use the GraphQL API. Run the following command:
+   ```powershell
+   gh api graphql -F owner="<owner>" -F repo="<repo>" -F number=<number> -f query='query($owner: String!, $repo: String!, $number: Int!) { repository(owner: $owner, name: $repo) { pullRequest(number: $number) { reviewThreads(first: 50) { nodes { isResolved comments(first: 10) { nodes { id body path line url } } } } } } }'
+   ```
+
+3. **Filter and Format Unresolved Comments**:
+   * Identify all threads where `isResolved` is `false`.
+   * For each unresolved comment, extract the `body`, `path`, `line`, and `url`.
+   * Present them to the user, providing clickable file links formatted using the `file://` scheme and pointing to the specific line number (e.g., `[filename](file:///absolute/path/to/file#Lline)`).

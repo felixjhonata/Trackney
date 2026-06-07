@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Trackney</string>
+    <string name="manage_categories">Manage categories</string>
 </resources>

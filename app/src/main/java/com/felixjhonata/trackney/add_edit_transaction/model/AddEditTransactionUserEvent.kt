@@ -12,6 +12,7 @@ sealed interface AddEditTransactionUserEvent {
     data class ChangeTransactionType(val type: TransactionType): AddEditTransactionUserEvent
     data class ChangeSelectedCategory(val category: Category): AddEditTransactionUserEvent
     data class ChangeNote(val note: String): AddEditTransactionUserEvent
+    object NavigateToManageCategory: AddEditTransactionUserEvent
     object DismissDialog: AddEditTransactionUserEvent
     object ShowDatePickerDialog: AddEditTransactionUserEvent
     data class ShowTimePickerDialog(val selectedDate: LocalDate): AddEditTransactionUserEvent

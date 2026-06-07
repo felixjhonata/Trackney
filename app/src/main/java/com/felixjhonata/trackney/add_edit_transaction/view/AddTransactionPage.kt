@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.NavKey
 import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUiEvent
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.add_edit_transaction.viewmodel.AddTransactionViewModel
+import com.felixjhonata.trackney.shared.model.ManageCategory
 
 @Composable
 fun AddTransactionPage(
@@ -34,6 +35,9 @@ fun AddTransactionPage(
                         uiEvent.message,
                         withDismissAction = true
                     )
+                }
+                is AddEditTransactionUiEvent.NavigateToManageCategory -> {
+                    navBackStack.add(ManageCategory(uiEvent.type))
                 }
             }
         }
