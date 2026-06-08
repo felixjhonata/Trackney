@@ -27,4 +27,7 @@ class TransactionRepository @Inject constructor(
 
     fun getTransactionsByDateRange(start: Long, end: Long) =
         transactionDao.getTransactionsByDateRange(start, end)
+
+    suspend fun hasTransactionsWithCategoryId(categoryId: Int) =
+        transactionDao.hasTransactionsWithCategoryId(categoryId)
 }

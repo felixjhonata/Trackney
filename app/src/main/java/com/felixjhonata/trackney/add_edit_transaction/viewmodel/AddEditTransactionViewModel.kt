@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -46,7 +49,6 @@ abstract class AddEditTransactionViewModel(
 
             field = value
         }
-    protected var categories: List<Category> = emptyList()
 
     private val _uiState = MutableStateFlow(
         AddEditTransactionUiState(
@@ -60,15 +62,17 @@ abstract class AddEditTransactionViewModel(
 
     init {
         viewModelScope.launch {
-            categories = categoryRepository.getCategories()
-
-            _uiState.update {
-                it.copy(
-                    categories = categories.filter { category ->
-                        category.type == uiState.value.type
+            categoryRepository.getCategories()
+                .combine(
+                    uiState.map { it.type }.distinctUntilChanged()
+                ) { allCategories, type ->
+                    allCategories.filter { it.type == type }
+                }
+                .collect { filteredCategories ->
+                    _uiState.update {
+                        it.copy(categories = filteredCategories)
                     }
-                )
-            }
+                }
         }
     }
 
@@ -86,9 +90,6 @@ abstract class AddEditTransactionViewModel(
         _uiState.update {
             it.copy(
                 type = type,
-                categories = categories.filter { category ->
-                    category.type == type
-                },
                 selectedCategory = null
             )
         }
@@ -108,8 +109,7 @@ abstract class AddEditTransactionViewModel(
                 selectedLocalDateTime = transaction.dateTime,
                 type = category.type,
                 selectedCategory = category,
-                note = transaction.note,
-                categories = categories.filter { c -> c.type == category.type }
+                note = transaction.note
             )
         }
     }
@@ -184,6 +184,11 @@ abstract class AddEditTransactionViewModel(
             }
 
             AddEditTransactionUserEvent.BackPressed -> onBack()
+            AddEditTransactionUserEvent.NavigateToManageCategory -> {
+                viewModelScope.launch {
+                    _uiEvent.emit(AddEditTransactionUiEvent.NavigateToManageCategory(uiState.value.type))
+                }
+            }
             is AddTransactionUserEvent -> handleChildrenUserEvent(event)
             is EditTransactionUserEvent -> handleChildrenUserEvent(event)
         }

@@ -14,6 +14,7 @@ import com.felixjhonata.trackney.add_edit_transaction.model.AddEditTransactionUi
 import com.felixjhonata.trackney.add_edit_transaction.model.ModifyTransactionType
 import com.felixjhonata.trackney.add_edit_transaction.viewmodel.EditTransactionViewModel
 import com.felixjhonata.trackney.shared.model.EditTransaction
+import com.felixjhonata.trackney.shared.model.ManageCategory
 
 @Composable
 fun EditTransactionPage(
@@ -40,6 +41,9 @@ fun EditTransactionPage(
                         uiEvent.message,
                         withDismissAction = true
                     )
+                }
+                is AddEditTransactionUiEvent.NavigateToManageCategory -> {
+                    navBackStack.add(ManageCategory(uiEvent.type))
                 }
             }
         }

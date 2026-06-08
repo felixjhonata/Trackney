@@ -15,9 +15,11 @@ import androidx.navigation3.ui.NavDisplay
 import com.felixjhonata.trackney.add_edit_transaction.view.AddTransactionPage
 import com.felixjhonata.trackney.add_edit_transaction.view.EditTransactionPage
 import com.felixjhonata.trackney.home.view.HomePage
+import com.felixjhonata.trackney.manage_category.view.ManageCategoryPage
 import com.felixjhonata.trackney.shared.model.AddTransaction
 import com.felixjhonata.trackney.shared.model.EditTransaction
 import com.felixjhonata.trackney.shared.model.Home
+import com.felixjhonata.trackney.shared.model.ManageCategory
 import com.felixjhonata.trackney.ui.theme.TrackneyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -49,6 +51,10 @@ class MainActivity : ComponentActivity() {
 
                         entry<EditTransaction> { key ->
                             EditTransactionPage(navBackStack, key = key)
+                        }
+
+                        entry<ManageCategory> { key ->
+                            ManageCategoryPage(navBackStack, key = key)
                         }
                     },
                     transitionSpec = {

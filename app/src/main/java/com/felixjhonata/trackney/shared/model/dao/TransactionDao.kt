@@ -28,4 +28,7 @@ interface TransactionDao {
     @Transaction
     @Query("SELECT * FROM transactions WHERE dateTime >= :start AND dateTime <= :end ORDER BY dateTime DESC")
     fun getTransactionsByDateRange(start: Long, end: Long): Flow<List<TransactionWithCategory>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE category_id = :categoryId)")
+    suspend fun hasTransactionsWithCategoryId(categoryId: Int): Boolean
 }

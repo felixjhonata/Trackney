@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -199,13 +200,26 @@ private fun CategorySection(
     categories: List<Category>,
     selectedCategory: Category?,
     onSelectCategory: (Category) -> Unit,
+    onManageCategoryClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Text(
-        "Category",
-        modifier = modifier,
-        style = MaterialTheme.typography.titleMedium
-    )
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            "Category",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        IconButton(onClick = onManageCategoryClicked) {
+            Icon(
+                painterResource(R.drawable.outline_edit_24),
+                stringResource(R.string.manage_categories)
+            )
+        }
+    }
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -252,9 +266,7 @@ private fun NoteField(
                 modifier = Modifier.fillMaxWidth(),
                 value = note,
                 onValueChange = onChangeNote,
-                textStyle = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                ),
+                textStyle = MaterialTheme.typography.bodyMedium,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onSecondaryContainer),
                 minLines = 4,
                 maxLines = 4
@@ -517,11 +529,14 @@ fun AddEditTransactionPageContent(
             CategorySection(
                 uiState.categories,
                 uiState.selectedCategory,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 12.dp).fillMaxWidth(),
                 onSelectCategory = {
                     onUserEvent(
                         AddEditTransactionUserEvent.ChangeSelectedCategory(it)
                     )
+                },
+                onManageCategoryClicked = {
+                    onUserEvent(AddEditTransactionUserEvent.NavigateToManageCategory)
                 }
             )
             Spacer(Modifier.height(8.dp))
@@ -559,7 +574,7 @@ fun AddEditTransactionPageContent(
     }
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
 private fun AddEditTransactionPagePreview() {
     val categories = listOf(

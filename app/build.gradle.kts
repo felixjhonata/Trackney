@@ -42,6 +42,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "${rootProject.projectDir}/docs/schemas")
+}
+
 dependencies {
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)

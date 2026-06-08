@@ -11,3 +11,6 @@ data object AddTransaction: NavKey
 
 @Serializable
 data class EditTransaction(val transactionId: Int): NavKey
+
+@Serializable
+data class ManageCategory(val type: TransactionType): NavKey

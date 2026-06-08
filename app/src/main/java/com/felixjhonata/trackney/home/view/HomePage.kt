@@ -181,12 +181,11 @@ private fun BalanceDetailCard(
 }
 
 @Composable
-private fun SectionTitle(
-    title: String,
+private fun TransactionsSectionTitle(
     modifier: Modifier = Modifier
 ) {
     Text(
-        title,
+        "Transactions",
         modifier = modifier,
         style = MaterialTheme.typography.titleLarge
     )
@@ -202,9 +201,7 @@ private fun TransactionTitle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        SectionTitle(
-            "Transactions"
-        )
+        TransactionsSectionTitle()
 
         Button(
             onClick = onAdd
