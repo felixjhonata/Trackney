@@ -123,3 +123,58 @@ When asked to fetch or read unresolved comments/reviews on a pull request using 
    * Identify all threads where `isResolved` is `false`.
    * For each unresolved comment, extract the `body`, `path`, `line`, and `url`.
    * Present them to the user, providing clickable file links formatted using the `file://` scheme and pointing to the specific line number (e.g., `[filename](file:///absolute/path/to/file#Lline)`).
+
+## 9. Pull/Merge Request Description Format
+
+All Pull Request (PR) or Merge Request (MR) descriptions must follow the structured format demonstrated in PR #15:
+
+1. **High-Level Overview**: A 1-2 sentence paragraph explaining the primary goals, context, and motivation of the pull request.
+2. **Summary of Changes**: 
+   * Header: `### 📝 Summary of Changes`
+   * Format: A numbered list of logical groupings (e.g., UI, Database, Business Logic).
+   * Sub-bullets: Detail specific changes using hyphens (`-`).
+3. **Overall Effect**:
+   * Header: `### 🚀 Overall Effect`
+   * Format: A brief paragraph describing the user experience impact, performance improvements, data integrity guarantees, or other high-level effects of the PR.
+4. **File Summary**:
+   * Header: `### 📁 File Summary`
+   * Format: Subsection headers for new, modified, and removed files:
+     * `#### 🆕 New Files (<count>)` followed by list of bulleted paths (`* path`)
+     * `#### 🛠️ Modified Files (<count>)` followed by list of bulleted paths (`* path`)
+     * `#### ❌ Removed Files (<count>)` followed by list of bulleted paths (`* path`)
+5. **Dividers**: Sections are separated by a horizontal rule (`---`).
+
+### Template:
+```markdown
+<High-level description of changes and what they enable.>
+
+---
+
+### 📝 Summary of Changes
+
+1. **<Logical Category 1 (e.g. UI & Page Flow)>**:
+   - <Specific change description>
+   - <Specific change description>
+
+2. **<Logical Category 2 (e.g. Database Refactoring)>**:
+   - <Specific change description>
+   - <Specific change description>
+
+---
+
+### 🚀 Overall Effect
+<Description of the overall impact on the user, performance, or database stability.>
+
+---
+
+### 📁 File Summary
+
+#### 🆕 New Files (<count>)
+* `path/to/new/file`
+
+#### 🛠️ Modified Files (<count>)
+* `path/to/modified/file`
+
+#### ❌ Removed Files (<count>)
+* `path/to/removed/file` (or *None* if zero)
+```
