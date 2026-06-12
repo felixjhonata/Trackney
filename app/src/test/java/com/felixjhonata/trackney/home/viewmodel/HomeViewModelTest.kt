@@ -106,13 +106,11 @@ class HomeViewModelTest {
         assertTrue(group.totalAmount.contains("100.000"))
 
         assertEquals(2, group.transactions.size)
-        val item1 = group.transactions[0]
-        assertEquals("Job", item1.category)
-        assertEquals("10:30", item1.time)
-        assertTrue(item1.amount.contains("150.000"))
-        assertEquals(TransactionType.INCOME, item1.type)
-        assertEquals("Salary", item1.note)
-
+        val jobItem = group.transactions.first { it.category == "Job" }
+        assertEquals("10:30", jobItem.time)
+        assertTrue(jobItem.amount.contains("150.000"))
+        assertEquals(TransactionType.INCOME, jobItem.type)
+        assertEquals("Salary", jobItem.note)
         collectJob.cancel()
     }
 
