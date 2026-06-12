@@ -1,10 +1,6 @@
-# GEMINI.MD: The AI Agent Protocol
+# AGENTS.md: The AI Agent Protocol
 
-## 1. Identity & Role
-
-You are a **Senior Android Architect** and an expert in Clean Architecture. Your objective is to maintain a high-quality, offline-first codebase with concise, self-documenting code. You prioritize specific diffs over full-file rewrites.
-
-## 2. Technical Stack & Architecture
+## 1. Technical Stack & Architecture
 
 * **Architecture:** MVVM + Clean Architecture (Single Module).
 * **Domain:** Pure Kotlin (No Android dependencies).
@@ -19,7 +15,7 @@ You are a **Senior Android Architect** and an expert in Clean Architecture. Your
 
 * **Data Types:** Use `Double` for all transaction and budget amounts.
 
-## 3. UI Implementation Pattern (Stateless Content)
+## 2. UI Implementation Pattern (Stateless Content)
 
 Every screen must be split into two specific composables:
 
@@ -37,20 +33,20 @@ Every screen must be split into two specific composables:
 
 
 
-## 4. State & Event Handling
+## 3. State & Event Handling
 
 * **UI State:** Use a single `data class` for each screen's state.
 * **User Events:** Use a sealed class/interface for user intents, handled via a single `onUserEvent(event)` function in the ViewModel.
 * **UI Events:** Use a `MutableSharedFlow` in the ViewModel for one-shot UI triggers like Snackbars.
 * **Style:** Use raw Material 3 components and `MaterialTheme.colorScheme`. Ask the user before defining custom hex colors.
 
-## 5. Testing & Error Handling
+## 4. Testing & Error Handling
 
 * **Testing:** Use **MockK** exclusively for unit tests. No other mocking libraries.
 * **Logic Validation:** New business logic must include a unit test in `src/test`.
 * **Errors:** Surface errors to the user via Snackbars triggered by the `UIEvent` flow.
 
-## 6. Review & Modification Protocol
+## 5. Review & Modification Protocol
 
 * **Code Generation:** Provide only the specific diffs or functions requested. Do not output the entire file unless it is a new file or the context is small.
 * **Review Decision:** Every review must start with **APPROVE** or **REJECT**.
@@ -60,7 +56,7 @@ Every screen must be split into two specific composables:
 
 * **Documentation:** Maintain "self-documenting" code. Avoid KDoc unless the logic is exceptionally complex.
 
-## 7. Reference Patterns
+## 6. Reference Patterns
 
 ### ViewModel Structure
 
@@ -81,7 +77,6 @@ class FeatureViewModel @Inject constructor(
         }
     }
 }
-
 ```
 
 ### Compose Structure
@@ -106,7 +101,7 @@ fun FeatureScreen(
 }
 ```
 
-## 8. GitHub Pull Request Review & Comments Protocol
+## 7. GitHub Pull Request Review & Comments Protocol
 
 When asked to fetch or read unresolved comments/reviews on a pull request using the GitHub CLI (`gh`), follow this protocol:
 
@@ -124,7 +119,7 @@ When asked to fetch or read unresolved comments/reviews on a pull request using 
    * For each unresolved comment, extract the `body`, `path`, `line`, and `url`.
    * Present them to the user, providing clickable file links formatted using the `file://` scheme and pointing to the specific line number (e.g., `[filename](file:///absolute/path/to/file#Lline)`).
 
-## 9. Pull/Merge Request Description Format
+## 8. Pull/Merge Request Description Format
 
 All Pull Request (PR) or Merge Request (MR) descriptions must follow the structured format demonstrated in PR #15:
 
