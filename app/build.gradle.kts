@@ -7,6 +7,43 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+kover {
+    reports {
+        filters {
+            excludes {
+                // Exclude Android entry points and application class
+                classes(
+                    "com.felixjhonata.trackney.MainActivity",
+                    "com.felixjhonata.trackney.TrackneyApplication"
+                )
+                // Exclude Compose UI views, dependency injection modules, UI theme configs, and DB configuration
+                classes(
+                    "com.felixjhonata.trackney.ui.theme.*",
+                    "com.felixjhonata.trackney.*.view.*",
+                    "com.felixjhonata.trackney.shared.model.di.*",
+                    "com.felixjhonata.trackney.shared.model.database.TrackneyDatabase"
+                )
+                // Exclude generated DI (Hilt), DB (Room), and Compose compiler internal classes
+                classes(
+                    "*_HiltModules*",
+                    "*Hilt_*",
+                    "*_Factory*",
+                    "*_MembersInjector*",
+                    "*_Impl*",
+                    "*ComposableSingletons*",
+                    "dagger.hilt.internal.aggregatedroot.codegen.*",
+                    "hilt_aggregated_deps.*"
+                )
+            }
+        }
+        verify {
+            rule {
+                minBound(95)
+            }
+        }
+    }
+}
+
 android {
     namespace = "com.felixjhonata.trackney"
     compileSdk {
@@ -67,6 +104,9 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.serialization.json)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
