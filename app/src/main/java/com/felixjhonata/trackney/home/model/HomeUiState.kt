@@ -1,6 +1,7 @@
 package com.felixjhonata.trackney.home.model
 
 import android.net.Uri
+import androidx.annotation.StringRes
 import com.felixjhonata.trackney.shared.model.TransactionType
 
 data class HomeUiState(
@@ -41,5 +42,8 @@ sealed interface HomeUserEvent {
 sealed interface HomeUiEvent {
     data object NavigateToAdd : HomeUiEvent
     data class NavigateToEdit(val transactionId: Int) : HomeUiEvent
-    data class ShowSnackbar(val message: String) : HomeUiEvent
+    data class ShowSnackbar(
+        @param:StringRes val messageRes: Int,
+        val formatArg: String? = null
+    ) : HomeUiEvent
 }

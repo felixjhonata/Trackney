@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,6 +33,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -48,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -101,7 +104,7 @@ private fun MonthPicker(
     ) {
         ArrowIcon(
             R.drawable.outline_arrow_back_24,
-            "previous_month",
+            stringResource(R.string.previous_month_desc),
             onPrev
         )
 
@@ -116,7 +119,7 @@ private fun MonthPicker(
 
         ArrowIcon(
             R.drawable.outline_arrow_forward_24,
-            "after_month",
+            stringResource(R.string.next_month_desc),
             onNext
         )
     }
@@ -172,7 +175,7 @@ private fun BalanceDetailCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Total Balance",
+                stringResource(R.string.total_balance),
                 style = MaterialTheme.typography.labelLarge
             )
             Text(
@@ -186,13 +189,13 @@ private fun BalanceDetailCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 BalanceDetailSubcard(
-                    "Income",
+                    stringResource(R.string.income),
                     income,
                     modifier = Modifier.weight(1f)
                 )
 
                 BalanceDetailSubcard(
-                    "Expense",
+                    stringResource(R.string.expense),
                     expense,
                     modifier = Modifier.weight(1f)
                 )
@@ -206,7 +209,7 @@ private fun TransactionsSectionTitle(
     modifier: Modifier = Modifier
 ) {
     Text(
-        "Transactions",
+        stringResource(R.string.transactions),
         modifier = modifier,
         style = MaterialTheme.typography.titleLarge
     )
@@ -229,12 +232,12 @@ private fun TransactionTitle(
         ) {
             Icon(
                 painterResource(R.drawable.outline_add_24),
-                "add_icon"
+                stringResource(R.string.add_icon)
             )
 
             Spacer(Modifier.width(4.dp))
 
-            Text("Add")
+            Text(stringResource(R.string.add_lbl))
         }
     }
 }
@@ -271,10 +274,10 @@ private fun BackupSpeedDialFab(
                     icon = {
                         Icon(
                             painterResource(R.drawable.outline_download_24),
-                            contentDescription = "Import Backup"
+                            contentDescription = stringResource(R.string.import_backup)
                         )
                     },
-                    text = { Text("Import Backup") },
+                    text = { Text(stringResource(R.string.import_backup)) },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
 
@@ -284,10 +287,10 @@ private fun BackupSpeedDialFab(
                     icon = {
                         Icon(
                             painterResource(R.drawable.outline_upload_24),
-                            contentDescription = "Export Backup"
+                            contentDescription = stringResource(R.string.export_backup)
                         )
                     },
-                    text = { Text("Export Backup") },
+                    text = { Text(stringResource(R.string.export_backup)) },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
 
@@ -304,7 +307,7 @@ private fun BackupSpeedDialFab(
                     if (isExpanded) R.drawable.outline_close_24
                     else R.drawable.baseline_menu_24
                 ),
-                contentDescription = "Backup Menu",
+                contentDescription = stringResource(R.string.backup_menu),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.rotate(rotationAngle)
             )
@@ -383,7 +386,7 @@ fun TransactionCard(
                 ) {
                     Icon(
                         painterResource(R.drawable.outline_attach_money_24),
-                        "dollar_icon",
+                        stringResource(R.string.dollar_icon),
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -435,6 +438,7 @@ private fun HomePageContent(
     modifier: Modifier = Modifier
 ) {
     var isFabExpanded by remember { mutableStateOf(false) }
+    var showImportConfirmation by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -449,7 +453,7 @@ private fun HomePageContent(
                 },
                 onImport = {
                     isFabExpanded = false
-                    onImportBackup()
+                    showImportConfirmation = true
                 }
             )
         }
@@ -546,6 +550,31 @@ private fun HomePageContent(
                 )
             }
 
+            if (showImportConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { showImportConfirmation = false },
+                    title = { Text(stringResource(R.string.import_backup_confirmation_title)) },
+                    text = { Text(stringResource(R.string.import_backup_confirmation_message)) },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showImportConfirmation = false
+                                onImportBackup()
+                            }
+                        ) {
+                            Text(stringResource(R.string.import_action))
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(
+                            onClick = { showImportConfirmation = false }
+                        ) {
+                            Text(stringResource(R.string.cancel_action))
+                        }
+                    }
+                )
+            }
+
             if (uiState.isExporting || uiState.isImporting) {
                 Dialog(
                     onDismissRequest = {},
@@ -568,7 +597,11 @@ private fun HomePageContent(
                             CircularProgressIndicator()
                             Spacer(Modifier.height(12.dp))
                             Text(
-                                text = if (uiState.isExporting) "Exporting..." else "Importing...",
+                                text = if (uiState.isExporting) {
+                                    stringResource(R.string.exporting)
+                                } else {
+                                    stringResource(R.string.importing)
+                                },
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -600,12 +633,26 @@ fun HomePage(
         uri?.let { viewModel.onUserEvent(HomeUserEvent.ImportData(it)) }
     }
 
+    val exportSuccess = stringResource(R.string.backup_exported_success)
+    val importSuccess = stringResource(R.string.backup_imported_success)
+    val exportFailedFormat = stringResource(R.string.export_failed)
+    val importFailedFormat = stringResource(R.string.import_failed)
+
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
                 HomeUiEvent.NavigateToAdd -> navBackStack.add(AddTransaction)
                 is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction(event.transactionId))
-                is HomeUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is HomeUiEvent.ShowSnackbar -> {
+                    val message = when (event.messageRes) {
+                        R.string.backup_exported_success -> exportSuccess
+                        R.string.backup_imported_success -> importSuccess
+                        R.string.export_failed -> exportFailedFormat.format(event.formatArg)
+                        R.string.import_failed -> importFailedFormat.format(event.formatArg)
+                        else -> ""
+                    }
+                    snackbarHostState.showSnackbar(message)
+                }
             }
         }
     }

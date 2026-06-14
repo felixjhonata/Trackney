@@ -11,8 +11,8 @@ import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
 import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.felixjhonata.trackney.shared.util.BackupStreamProvider
+import com.felixjhonata.trackney.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val exportBackupUseCase: ExportBackupUseCase,
     private val importBackupUseCase: ImportBackupUseCase,
-    @param:ApplicationContext private val context: Context
+    private val backupStreamProvider: BackupStreamProvider
 ) : ViewModel() {
     private val _isExporting = MutableStateFlow(false)
     private val _isImporting = MutableStateFlow(false)
@@ -153,12 +153,12 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _isExporting.value = true
             try {
-                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                backupStreamProvider.openOutputStream(uri)?.use { outputStream ->
                     exportBackupUseCase(outputStream)
                 }
-                _uiEvent.emit(HomeUiEvent.ShowSnackbar("Backup exported successfully"))
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_exported_success))
             } catch (e: Exception) {
-                _uiEvent.emit(HomeUiEvent.ShowSnackbar("Export failed: ${e.localizedMessage}"))
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.export_failed, e.localizedMessage))
             } finally {
                 _isExporting.value = false
             }
@@ -169,12 +169,12 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _isImporting.value = true
             try {
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                backupStreamProvider.openInputStream(uri)?.use { inputStream ->
                     importBackupUseCase(inputStream)
                 }
-                _uiEvent.emit(HomeUiEvent.ShowSnackbar("Backup imported successfully"))
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_imported_success))
             } catch (e: Exception) {
-                _uiEvent.emit(HomeUiEvent.ShowSnackbar("Import failed: ${e.localizedMessage}"))
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.import_failed, e.localizedMessage))
             } finally {
                 _isImporting.value = false
             }

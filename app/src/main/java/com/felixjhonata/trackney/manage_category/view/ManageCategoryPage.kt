@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -92,12 +93,12 @@ private fun ListItem(
         IconBtn(
             R.drawable.outline_edit_24,
             onClick = onEdit,
-            contentDescription = "Edit button"
+            contentDescription = stringResource(R.string.edit_button)
         )
         IconBtn(
             R.drawable.outline_delete_24,
             onClick = onDelete,
-            contentDescription = "Delete button",
+            contentDescription = stringResource(R.string.delete_button),
             tint = MaterialTheme.colorScheme.error
         )
     }
@@ -115,12 +116,12 @@ private fun TopBar(
     }
     TopAppBar(
         modifier = modifier,
-        title = { Text("$transactionType Category") },
+        title = { Text(stringResource(R.string.category_title_format, transactionType)) },
         navigationIcon = {
             IconBtn(
                 R.drawable.outline_arrow_back_24,
                 onClick = onBack,
-                contentDescription = "Back button"
+                contentDescription = stringResource(R.string.back_button)
             )
         }
     )
@@ -161,14 +162,14 @@ private fun ConfirmDeleteDialogContent(
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                "Delete category",
+                stringResource(R.string.delete_category),
                 style = MaterialTheme.typography.headlineSmall
             )
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                "Are you sure you want to delete \"$categoryName\"?",
+                stringResource(R.string.delete_category_confirm, categoryName),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -181,13 +182,13 @@ private fun ConfirmDeleteDialogContent(
                 OutlinedButton(
                     onClick = onDismiss
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_action))
                 }
 
                 Button(
                     onClick = onConfirm
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_action))
                 }
             }
         }
@@ -233,14 +234,14 @@ private fun DeleteFailedDialogContent(
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                "Delete failed",
+                stringResource(R.string.delete_failed),
                 style = MaterialTheme.typography.headlineSmall
             )
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                "Category can't be deleted because it is still used in transaction(s)",
+                stringResource(R.string.delete_failed_message),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -250,7 +251,7 @@ private fun DeleteFailedDialogContent(
                 modifier = Modifier.align(Alignment.End),
                 onClick = onDismiss
             ) {
-                Text("Okay")
+                Text(stringResource(R.string.okay_action))
             }
         }
     }
@@ -297,7 +298,8 @@ fun AddEditCategoryDialogContent(
     nameErrorMessage: String? = null,
     onDismiss: () -> Unit
 ) {
-    val type = if (category == null) "Add" else "Edit"
+    val titleRes = if (category == null) R.string.add_category_title else R.string.edit_category_title
+    val buttonRes = if (category == null) R.string.add_action else R.string.edit_action
 
     var value by rememberSaveable(category) { mutableStateOf(category?.name.orEmpty()) }
 
@@ -309,7 +311,7 @@ fun AddEditCategoryDialogContent(
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                "$type category",
+                stringResource(titleRes),
                 style = MaterialTheme.typography.headlineSmall
             )
 
@@ -318,7 +320,7 @@ fun AddEditCategoryDialogContent(
             OutlinedTextField(
                 value = value,
                 onValueChange = { value = it },
-                placeholder = { Text("Category name...") },
+                placeholder = { Text(stringResource(R.string.category_name_placeholder)) },
                 isError = nameErrorMessage != null,
                 singleLine = true,
                 supportingText = nameErrorMessage?.let {
@@ -335,13 +337,13 @@ fun AddEditCategoryDialogContent(
                 OutlinedButton(
                     onClick = onDismiss
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_action))
                 }
 
                 Button(
                     onClick = { onConfirm(value) }
                 ) {
-                    Text(type)
+                    Text(stringResource(buttonRes))
                 }
             }
         }
@@ -378,7 +380,7 @@ fun ManageCategoryPageContent(
             ) {
                 Icon(
                     painterResource(R.drawable.outline_add_24),
-                    "add floating action button"
+                    stringResource(R.string.add_floating_action_button)
                 )
             }
         }
