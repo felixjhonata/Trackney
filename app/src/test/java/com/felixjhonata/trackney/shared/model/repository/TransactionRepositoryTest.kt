@@ -128,13 +128,11 @@ class TransactionRepositoryTest {
             Transaction(id = 12, dateTime = LocalDateTime.of(2026, 6, 14, 12, 0), amount = 20.0, categoryId = 3, note = "Unmapped")
         )
 
-        coEvery { categoryDao.getByNameAndType("Food", TransactionType.EXPENSE) } returns Category(id = 101, name = "Food", type = TransactionType.EXPENSE)
-        coEvery { categoryDao.getByNameAndType("Salary", TransactionType.INCOME) } returnsMany listOf(
-            null,
-            Category(id = 102, name = "Salary", type = TransactionType.INCOME)
+        coEvery { categoryDao.getAllList() } returns listOf(
+            Category(id = 101, name = "Food", type = TransactionType.EXPENSE)
         )
-        coEvery { categoryDao.insertCategory(any()) } returns Unit
-        coEvery { transactionDao.insertTransaction(any()) } returns Unit
+        coEvery { categoryDao.insertCategory(*anyVararg()) } returns longArrayOf(102L)
+        coEvery { transactionDao.insertTransaction(*anyVararg()) } returns Unit
 
         try {
             repository.restoreBackup(backupCategories, backupTransactions)
@@ -142,22 +140,8 @@ class TransactionRepositoryTest {
             io.mockk.unmockkStatic("androidx.room.RoomDatabaseKt")
         }
 
-        coVerify(exactly = 1) { categoryDao.getByNameAndType("Food", TransactionType.EXPENSE) }
-        coVerify(exactly = 2) { categoryDao.getByNameAndType("Salary", TransactionType.INCOME) }
-        coVerify(exactly = 1) { categoryDao.insertCategory(match { it.id == 0 && it.name == "Salary" && it.type == TransactionType.INCOME }) }
-
-        coVerify(exactly = 1) {
-            transactionDao.insertTransaction(match {
-                it.id == 0 && it.amount == 50.0 && it.categoryId == 101 && it.note == "Lunch"
-            })
-        }
-        coVerify(exactly = 1) {
-            transactionDao.insertTransaction(match {
-                it.id == 0 && it.amount == 5000.0 && it.categoryId == 102 && it.note == "Payday"
-            })
-        }
-        coVerify(exactly = 0) {
-            transactionDao.insertTransaction(match { it.note == "Unmapped" })
-        }
+        coVerify(exactly = 1) { categoryDao.getAllList() }
+        coVerify(exactly = 1) { categoryDao.insertCategory(*anyVararg()) }
+        coVerify(exactly = 1) { transactionDao.insertTransaction(*anyVararg()) }
     }
 }

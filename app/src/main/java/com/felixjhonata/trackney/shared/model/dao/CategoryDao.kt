@@ -26,7 +26,7 @@ interface CategoryDao {
     suspend fun getByNameAndType(name: String, type: TransactionType): Category?
 
     @Insert
-    suspend fun insertCategory(category: Category)
+    suspend fun insertCategory(vararg category: Category): LongArray
 
     @Update
     suspend fun updateCategory(category: Category)

@@ -105,7 +105,7 @@ class ManageCategoryViewModelTest {
 
         // 3. Successful insert
         coEvery { categoryRepository.existsByName("Snacks", TransactionType.EXPENSE) } returns false
-        coEvery { categoryRepository.insertCategory(any()) } returns Unit
+        coEvery { categoryRepository.insertCategory(any()) } returns longArrayOf(1L)
 
         viewModel.onUserEvent(ManageCategoryUserEvent.ShowAddCategoryDialog)
         viewModel.onUserEvent(ManageCategoryUserEvent.AddCategory(" Snacks "))

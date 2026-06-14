@@ -10,11 +10,14 @@ import java.io.OutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.encodeToStream
 
 class ExportBackupUseCase @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     suspend operator fun invoke(outputStream: OutputStream) = withContext(Dispatchers.IO) {
         val categories = categoryRepository.getAllCategoriesList().map {
             CategoryBackupDto(it.id, it.name, it.type)
@@ -23,8 +26,6 @@ class ExportBackupUseCase @Inject constructor(
             TransactionBackupDto(it.id, it.dateTime, it.amount, it.categoryId, it.note)
         }
         val backupData = BackupDataDto(categories, transactions)
-        val jsonString = Json.encodeToString(backupData)
-        outputStream.write(jsonString.toByteArray(Charsets.UTF_8))
-        outputStream.flush()
+        Json.encodeToStream(backupData, outputStream)
     }
 }

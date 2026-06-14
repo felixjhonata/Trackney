@@ -16,7 +16,7 @@ interface TransactionDao {
     suspend fun getAllTransactions(): List<TransactionEntity>
 
     @Insert
-    suspend fun insertTransaction(transaction: TransactionEntity)
+    suspend fun insertTransaction(vararg transaction: TransactionEntity)
 
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)

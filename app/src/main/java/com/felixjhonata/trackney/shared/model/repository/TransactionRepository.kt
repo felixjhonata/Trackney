@@ -22,35 +22,45 @@ class TransactionRepository @Inject constructor(
         backupTransactions: List<Transaction>
     ) {
         database.withTransaction {
-            val categoryIdMap = mutableMapOf<Int, Int>()
+            val existingCategories = categoryDao.getAllList()
+            val existingMap = existingCategories.associateBy { it.name to it.type }
 
-            // 1. Map and insert categories
+            val categoryIdMap = mutableMapOf<Int, Int>()
+            val newCategoriesToInsert = mutableListOf<Category>()
+            val oldIdsToInsertIndex = mutableListOf<Int>()
+
             for (category in backupCategories) {
-                val existingCategory = categoryDao.getByNameAndType(category.name, category.type)
-                if (existingCategory != null) {
-                    categoryIdMap[category.id] = existingCategory.id
+                val existing = existingMap[category.name to category.type]
+                if (existing != null) {
+                    categoryIdMap[category.id] = existing.id
                 } else {
-                    // Category doesn't exist, insert it. Since categoryDao.insertCategory returns Unit, 
-                    // we need to insert and then query the generated ID, or modify Dao to return Long.
-                    // Let's modify CategoryDao to return Long for insert, which is standard in Room.
-                    // Alternatively, we can insert and query again. Let's insert and query again to avoid modifying other classes unnecessarily, 
-                    // or let's inspect if categoryDao returns Long. It currently returns Unit. Let's insert and query.
-                    categoryDao.insertCategory(category.copy(id = 0))
-                    val newCategory = categoryDao.getByNameAndType(category.name, category.type)
-                    if (newCategory != null) {
-                        categoryIdMap[category.id] = newCategory.id
-                    }
+                    newCategoriesToInsert.add(category.copy(id = 0))
+                    oldIdsToInsertIndex.add(category.id)
                 }
             }
 
-            // 2. Map and insert transactions
+            if (newCategoriesToInsert.isNotEmpty()) {
+                val insertedIds = categoryDao.insertCategory(*newCategoriesToInsert.toTypedArray())
+                for (i in newCategoriesToInsert.indices) {
+                    val oldId = oldIdsToInsertIndex[i]
+                    val newId = insertedIds[i].toInt()
+                    categoryIdMap[oldId] = newId
+                }
+            }
+
+            val transactionsToInsert = mutableListOf<Transaction>()
             for (transaction in backupTransactions) {
                 val newCategoryId = categoryIdMap[transaction.categoryId] ?: continue
-                val mappedTransaction = transaction.copy(
-                    id = 0, // Auto-generate new transaction ID to prevent collisions
-                    categoryId = newCategoryId
+                transactionsToInsert.add(
+                    transaction.copy(
+                        id = 0, // Auto-generate new transaction ID to prevent collisions
+                        categoryId = newCategoryId
+                    )
                 )
-                transactionDao.insertTransaction(mappedTransaction)
+            }
+
+            if (transactionsToInsert.isNotEmpty()) {
+                transactionDao.insertTransaction(*transactionsToInsert.toTypedArray())
             }
         }
     }

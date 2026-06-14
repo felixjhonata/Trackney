@@ -48,7 +48,7 @@ class CategoryRepositoryTest {
     @Test
     fun insertCategory() = runTest {
         val category = Category(name = "Food", type = TransactionType.EXPENSE)
-        coEvery { categoryDao.insertCategory(category) } returns Unit
+        coEvery { categoryDao.insertCategory(category) } returns longArrayOf(1L)
 
         repository.insertCategory(category)
 

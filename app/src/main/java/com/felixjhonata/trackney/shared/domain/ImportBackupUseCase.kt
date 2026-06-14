@@ -9,13 +9,15 @@ import java.io.InputStream
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeFromStream
 
 class ImportBackupUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     suspend operator fun invoke(inputStream: InputStream) = withContext(Dispatchers.IO) {
-        val jsonString = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val backupData = Json.decodeFromString<BackupDataDto>(jsonString)
+        val backupData = Json.decodeFromStream<BackupDataDto>(inputStream)
 
         val categories = backupData.categories.map {
             Category(it.id, it.name, it.type)
