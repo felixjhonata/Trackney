@@ -1,8 +1,15 @@
 package com.felixjhonata.trackney.home.view
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,41 +23,36 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
@@ -209,12 +211,8 @@ private fun TransactionsSectionTitle(
 @Composable
 private fun TransactionTitle(
     onAdd: () -> Unit,
-    onExportBackup: () -> Unit,
-    onImportBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -222,52 +220,84 @@ private fun TransactionTitle(
     ) {
         TransactionsSectionTitle()
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Button(
-                onClick = onAdd
+        Button(
+            onClick = onAdd
+        ) {
+            Icon(
+                painterResource(R.drawable.outline_add_24),
+                "add_icon"
+            )
+
+            Spacer(Modifier.width(4.dp))
+
+            Text("Add")
+        }
+    }
+}
+
+@Composable
+private fun BackupSpeedDialFab(
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End
+    ) {
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    painterResource(R.drawable.outline_add_24),
-                    "add_icon"
+                // Import Button
+                ExtendedFloatingActionButton(
+                    onClick = onImport,
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.outline_download_24),
+                            contentDescription = "Import Backup"
+                        )
+                    },
+                    text = { Text("Import Backup") },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
 
-                Spacer(Modifier.width(4.dp))
+                // Export Button
+                ExtendedFloatingActionButton(
+                    onClick = onExport,
+                    icon = {
+                        Icon(
+                            painterResource(R.drawable.outline_upload_24),
+                            contentDescription = "Export Backup"
+                        )
+                    },
+                    text = { Text("Export Backup") },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
 
-                Text("Add")
+                Spacer(Modifier.height(8.dp))
             }
+        }
 
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(3.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
-                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
-                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
-                    }
-                }
-
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Export Backup") },
-                        onClick = {
-                            showMenu = false
-                            onExportBackup()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Import Backup") },
-                        onClick = {
-                            showMenu = false
-                            onImportBackup()
-                        }
-                    )
-                }
-            }
+        FloatingActionButton(
+            onClick = onToggle,
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(
+                painter = painterResource(
+                    if (isExpanded) R.drawable.outline_close_24
+                    else R.drawable.baseline_menu_24
+                ),
+                contentDescription = "Backup Menu",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }
@@ -394,9 +424,25 @@ private fun HomePageContent(
     onImportBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var isFabExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        floatingActionButton = {
+            BackupSpeedDialFab(
+                isExpanded = isFabExpanded,
+                onToggle = { isFabExpanded = !isFabExpanded },
+                onExport = {
+                    isFabExpanded = false
+                    onExportBackup()
+                },
+                onImport = {
+                    isFabExpanded = false
+                    onImportBackup()
+                }
+            )
+        }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             LazyColumn {
@@ -427,8 +473,6 @@ private fun HomePageContent(
                 item {
                     TransactionTitle(
                         onAdd = { onUserEvent(HomeUserEvent.AddTransactionClicked) },
-                        onExportBackup = onExportBackup,
-                        onImportBackup = onImportBackup,
                         modifier = Modifier
                             .padding(horizontal = 12.dp)
                             .fillMaxWidth()
@@ -462,7 +506,13 @@ private fun HomePageContent(
                                     end = 12.dp,
                                     bottom = 12.dp
                                 )
-                                .clickable { onUserEvent(HomeUserEvent.EditTransactionClicked(transaction.id)) }
+                                .clickable {
+                                    onUserEvent(
+                                        HomeUserEvent.EditTransactionClicked(
+                                            transaction.id
+                                        )
+                                    )
+                                }
                         )
                     }
                 }
@@ -471,7 +521,10 @@ private fun HomePageContent(
             if (uiState.isExporting || uiState.isImporting) {
                 Dialog(
                     onDismissRequest = {},
-                    properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+                    properties = DialogProperties(
+                        dismissOnBackPress = false,
+                        dismissOnClickOutside = false
+                    )
                 ) {
                     Box(
                         modifier = Modifier
@@ -534,7 +587,14 @@ fun HomePage(
         onUserEvent = viewModel::onUserEvent,
         snackbarHostState = snackbarHostState,
         onExportBackup = { exportLauncher.launch("trackney_backup.json") },
-        onImportBackup = { importLauncher.launch(arrayOf("application/json", "application/octet-stream")) },
+        onImportBackup = {
+            importLauncher.launch(
+                arrayOf(
+                    "application/json",
+                    "application/octet-stream"
+                )
+            )
+        },
         modifier = modifier
     )
 }
