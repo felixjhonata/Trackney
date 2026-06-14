@@ -10,6 +10,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.mockkStatic
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -95,5 +97,67 @@ class TransactionRepositoryTest {
 
         assertTrue(result)
         coVerify(exactly = 1) { transactionDao.hasTransactionsWithCategoryId(2) }
+    }
+
+    @Test
+    fun getAllTransactions() = runTest {
+        val transactions = listOf(Transaction(id = 1, dateTime = LocalDateTime.now(), amount = 100.0, categoryId = 2, note = "Test"))
+        coEvery { transactionDao.getAllTransactions() } returns transactions
+
+        val result = repository.getAllTransactions()
+
+        assertEquals(transactions, result)
+        coVerify(exactly = 1) { transactionDao.getAllTransactions() }
+    }
+
+    @Test
+    fun restoreBackup() = runTest {
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        coEvery { database.withTransaction<Any>(any()) } coAnswers {
+            val block = secondArg<suspend () -> Any>()
+            block.invoke()
+        }
+
+        val backupCategories = listOf(
+            Category(id = 1, name = "Food", type = TransactionType.EXPENSE),
+            Category(id = 2, name = "Salary", type = TransactionType.INCOME)
+        )
+        val backupTransactions = listOf(
+            Transaction(id = 10, dateTime = LocalDateTime.of(2026, 6, 14, 10, 0), amount = 50.0, categoryId = 1, note = "Lunch"),
+            Transaction(id = 11, dateTime = LocalDateTime.of(2026, 6, 14, 11, 0), amount = 5000.0, categoryId = 2, note = "Payday"),
+            Transaction(id = 12, dateTime = LocalDateTime.of(2026, 6, 14, 12, 0), amount = 20.0, categoryId = 3, note = "Unmapped")
+        )
+
+        coEvery { categoryDao.getByNameAndType("Food", TransactionType.EXPENSE) } returns Category(id = 101, name = "Food", type = TransactionType.EXPENSE)
+        coEvery { categoryDao.getByNameAndType("Salary", TransactionType.INCOME) } returnsMany listOf(
+            null,
+            Category(id = 102, name = "Salary", type = TransactionType.INCOME)
+        )
+        coEvery { categoryDao.insertCategory(any()) } returns Unit
+        coEvery { transactionDao.insertTransaction(any()) } returns Unit
+
+        try {
+            repository.restoreBackup(backupCategories, backupTransactions)
+        } finally {
+            io.mockk.unmockkStatic("androidx.room.RoomDatabaseKt")
+        }
+
+        coVerify(exactly = 1) { categoryDao.getByNameAndType("Food", TransactionType.EXPENSE) }
+        coVerify(exactly = 2) { categoryDao.getByNameAndType("Salary", TransactionType.INCOME) }
+        coVerify(exactly = 1) { categoryDao.insertCategory(match { it.id == 0 && it.name == "Salary" && it.type == TransactionType.INCOME }) }
+
+        coVerify(exactly = 1) {
+            transactionDao.insertTransaction(match {
+                it.id == 0 && it.amount == 50.0 && it.categoryId == 101 && it.note == "Lunch"
+            })
+        }
+        coVerify(exactly = 1) {
+            transactionDao.insertTransaction(match {
+                it.id == 0 && it.amount == 5000.0 && it.categoryId == 102 && it.note == "Payday"
+            })
+        }
+        coVerify(exactly = 0) {
+            transactionDao.insertTransaction(match { it.note == "Unmapped" })
+        }
     }
 }

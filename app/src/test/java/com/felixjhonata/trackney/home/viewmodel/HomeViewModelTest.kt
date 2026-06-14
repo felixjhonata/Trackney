@@ -10,6 +10,8 @@ import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -17,10 +19,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -182,5 +186,215 @@ class HomeViewModelTest {
         assertEquals(currentLocalDate.minusMonths(1).format(formatter), viewModel.uiState.value.selectedMonthYear)
 
         collectJob.cancel()
+    }
+
+    @Test
+    fun testExportBackupSuccess() = runTest(testDispatcher) {
+        val uri: android.net.Uri = mockk()
+        val contentResolver: android.content.ContentResolver = mockk()
+        val outputStream = java.io.ByteArrayOutputStream()
+        
+        every { context.contentResolver } returns contentResolver
+        every { contentResolver.openOutputStream(uri) } returns outputStream
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns testDispatcher
+        every { Dispatchers.Default } answers { callOriginal() }
+        every { Dispatchers.Main } answers { callOriginal() }
+        every { Dispatchers.Unconfined } answers { callOriginal() }
+
+        try {
+            viewModel.onUserEvent(HomeUserEvent.ExportData(uri))
+            advanceUntilIdle()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+
+        io.mockk.coVerify(exactly = 1) { exportBackupUseCase.invoke(outputStream) }
+        assertTrue(events.contains(HomeUiEvent.ShowSnackbar("Backup exported successfully")))
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testExportBackupFailure() = runTest(testDispatcher) {
+        val uri: android.net.Uri = mockk()
+        val contentResolver: android.content.ContentResolver = mockk()
+        
+        every { context.contentResolver } returns contentResolver
+        every { contentResolver.openOutputStream(uri) } throws RuntimeException("Disk full")
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns testDispatcher
+        every { Dispatchers.Default } answers { callOriginal() }
+        every { Dispatchers.Main } answers { callOriginal() }
+        every { Dispatchers.Unconfined } answers { callOriginal() }
+
+        try {
+            viewModel.onUserEvent(HomeUserEvent.ExportData(uri))
+            advanceUntilIdle()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+
+        assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.message.contains("Export failed") })
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testImportBackupSuccess() = runTest(testDispatcher) {
+        val uri: android.net.Uri = mockk()
+        val contentResolver: android.content.ContentResolver = mockk()
+        val inputStream = java.io.ByteArrayInputStream(byteArrayOf())
+        
+        every { context.contentResolver } returns contentResolver
+        every { contentResolver.openInputStream(uri) } returns inputStream
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns testDispatcher
+        every { Dispatchers.Default } answers { callOriginal() }
+        every { Dispatchers.Main } answers { callOriginal() }
+        every { Dispatchers.Unconfined } answers { callOriginal() }
+
+        try {
+            viewModel.onUserEvent(HomeUserEvent.ImportData(uri))
+            advanceUntilIdle()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+
+        io.mockk.coVerify(exactly = 1) { importBackupUseCase.invoke(inputStream) }
+        assertTrue(events.contains(HomeUiEvent.ShowSnackbar("Backup imported successfully")))
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testImportBackupFailure() = runTest(testDispatcher) {
+        val uri: android.net.Uri = mockk()
+        val contentResolver: android.content.ContentResolver = mockk()
+        
+        every { context.contentResolver } returns contentResolver
+        every { contentResolver.openInputStream(uri) } throws RuntimeException("Invalid JSON")
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns testDispatcher
+        every { Dispatchers.Default } answers { callOriginal() }
+        every { Dispatchers.Main } answers { callOriginal() }
+        every { Dispatchers.Unconfined } answers { callOriginal() }
+
+        try {
+            viewModel.onUserEvent(HomeUserEvent.ImportData(uri))
+            advanceUntilIdle()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+
+        assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.message.contains("Import failed") })
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testEventsBoilerplate() {
+        val uri1: android.net.Uri = mockk()
+        val uri2: android.net.Uri = mockk()
+        
+        // HomeUserEvent
+        val prev = HomeUserEvent.PreviousMonth
+        val next = HomeUserEvent.NextMonth
+        val add = HomeUserEvent.AddTransactionClicked
+        val edit1 = HomeUserEvent.EditTransactionClicked(1)
+        val edit2 = HomeUserEvent.EditTransactionClicked(1)
+        val edit3 = HomeUserEvent.EditTransactionClicked(2)
+        val exp1 = HomeUserEvent.ExportData(uri1)
+        val exp2 = HomeUserEvent.ExportData(uri1)
+        val exp3 = HomeUserEvent.ExportData(uri2)
+        val imp1 = HomeUserEvent.ImportData(uri1)
+        val imp2 = HomeUserEvent.ImportData(uri1)
+        val imp3 = HomeUserEvent.ImportData(uri2)
+
+        assertEquals(prev, HomeUserEvent.PreviousMonth)
+        assertEquals(next, HomeUserEvent.NextMonth)
+        assertEquals(add, HomeUserEvent.AddTransactionClicked)
+        assertEquals(edit1, edit2)
+        assertNotEquals(edit1, edit3)
+        assertEquals(edit1.hashCode(), edit2.hashCode())
+        assertEquals("EditTransactionClicked(transactionId=1)", edit1.toString())
+        
+        assertEquals(exp1, exp2)
+        assertNotEquals(exp1, exp3)
+        assertEquals(exp1.hashCode(), exp2.hashCode())
+        assertEquals("ExportData(uri=$uri1)", exp1.toString())
+        
+        assertEquals(imp1, imp2)
+        assertNotEquals(imp1, imp3)
+        assertEquals(imp1.hashCode(), imp2.hashCode())
+        assertEquals("ImportData(uri=$uri1)", imp1.toString())
+
+        // HomeUiEvent
+        val navAdd = HomeUiEvent.NavigateToAdd
+        val navEdit1 = HomeUiEvent.NavigateToEdit(1)
+        val navEdit2 = HomeUiEvent.NavigateToEdit(1)
+        val navEdit3 = HomeUiEvent.NavigateToEdit(2)
+        val snack1 = HomeUiEvent.ShowSnackbar("test")
+        val snack2 = HomeUiEvent.ShowSnackbar("test")
+        val snack3 = HomeUiEvent.ShowSnackbar("other")
+
+        assertEquals(navAdd, HomeUiEvent.NavigateToAdd)
+        assertEquals(navEdit1, navEdit2)
+        assertNotEquals(navEdit1, navEdit3)
+        assertEquals(navEdit1.hashCode(), navEdit2.hashCode())
+        assertEquals("NavigateToEdit(transactionId=1)", navEdit1.toString())
+        
+        assertEquals(snack1, snack2)
+        assertNotEquals(snack1, snack3)
+        assertEquals(snack1.hashCode(), snack2.hashCode())
+        assertEquals("ShowSnackbar(message=test)", snack1.toString())
     }
 }

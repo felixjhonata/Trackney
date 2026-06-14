@@ -74,4 +74,15 @@ class CategoryRepositoryTest {
 
         coVerify(exactly = 1) { categoryDao.updateCategory(category) }
     }
+
+    @Test
+    fun getAllCategoriesList() = runTest {
+        val categoriesList = listOf(Category(id = 1, name = "Food", type = TransactionType.EXPENSE))
+        coEvery { categoryDao.getAllList() } returns categoriesList
+
+        val result = repository.getAllCategoriesList()
+
+        assertEquals(categoriesList, result)
+        coVerify(exactly = 1) { categoryDao.getAllList() }
+    }
 }
