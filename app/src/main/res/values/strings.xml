@@ -1,4 +1,68 @@
 <resources>
     <string name="app_name">Trackney</string>
     <string name="manage_categories">Manage categories</string>
+
+    <!-- General Actions -->
+    <string name="cancel_action">Cancel</string>
+    <string name="delete_action">Delete</string>
+    <string name="okay_action">Okay</string>
+    <string name="next_action">Next</string>
+    <string name="done_action">Done</string>
+    <string name="add_action">Add</string>
+    <string name="edit_action">Edit</string>
+
+    <!-- Accessibility / Icons Descriptions -->
+    <string name="back_icon">back_icon</string>
+    <string name="calendar_icon">calendar_icon</string>
+    <string name="edit_icon">edit_icon</string>
+    <string name="add_icon">add_icon</string>
+    <string name="edit_button">Edit button</string>
+    <string name="delete_button">Delete button</string>
+    <string name="back_button">Back button</string>
+    <string name="previous_month_desc">Previous Month</string>
+    <string name="next_month_desc">Next Month</string>
+    <string name="dollar_icon">dollar_icon</string>
+
+    <!-- Home Screen -->
+    <string name="total_balance">Total Balance</string>
+    <string name="income">Income</string>
+    <string name="expense">Expense</string>
+    <string name="transactions">Transactions</string>
+    <string name="add_lbl">Add</string>
+    <string name="import_backup">Import Backup</string>
+    <string name="export_backup">Export Backup</string>
+    <string name="backup_menu">Backup Menu</string>
+    <string name="exporting">Exporting…</string>
+    <string name="importing">Importing…</string>
+    <string name="backup_exported_success">Backup exported successfully</string>
+    <string name="backup_imported_success">Backup imported successfully</string>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="import_backup_confirmation_title">Import Backup</string>
+    <string name="import_backup_confirmation_message">Importing a backup will merge categories and transactions into your existing database. This may result in duplicate entries if the same backup is imported multiple times.</string>
+    <string name="import_action">Import</string>
+
+    <!-- Manage Category Screen -->
+    <string name="category_title_format">%1$s Category</string>
+    <string name="delete_category">Delete category</string>
+    <string name="delete_category_confirm">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="delete_failed">Delete failed</string>
+    <string name="delete_failed_message">Category can\'t be deleted because it is still used in transaction(s)</string>
+    <string name="add_category_title">Add category</string>
+    <string name="edit_category_title">Edit category</string>
+    <string name="category_name_placeholder">Category name…</string>
+    <string name="add_floating_action_button">add floating action button</string>
+
+    <!-- Add/Edit Transaction Screen -->
+    <string name="transaction_title_format">%1$s Transaction</string>
+    <string name="amount">Amount</string>
+    <string name="currency_rp">Rp</string>
+    <string name="category">Category</string>
+    <string name="note_optional">Note (optional)</string>
+    <string name="add_transaction">Add Transaction</string>
+    <string name="delete_transaction">Delete Transaction</string>
+    <string name="edit_transaction">Edit Transaction</string>
+    <string name="select_time">Select time</string>
+    <string name="delete_transaction_confirm_title">Are you sure?</string>
+    <string name="delete_transaction_confirm_message">You are going to delete the transaction record permanently</string>
 </resources>

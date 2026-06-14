@@ -74,20 +74,20 @@ private fun TopBar(
     onBack: () -> Unit
 ) {
     val modifyType = when (type) {
-        ModifyTransactionType.ADD -> "Add"
-        ModifyTransactionType.EDIT -> "Edit"
+        ModifyTransactionType.ADD -> stringResource(R.string.add_action)
+        ModifyTransactionType.EDIT -> stringResource(R.string.edit_action)
     }
 
     TopAppBar(
         modifier = modifier,
-        title = { Text("$modifyType Transaction") },
+        title = { Text(stringResource(R.string.transaction_title_format, modifyType)) },
         navigationIcon = {
             IconButton(
                 onClick = onBack
             ) {
                 Icon(
                     painterResource(R.drawable.outline_arrow_back_24),
-                    "back_icon"
+                    stringResource(R.string.back_icon)
                 )
             }
         }
@@ -109,7 +109,7 @@ private fun DatePickerSection(
         ) {
             Icon(
                 painterResource(R.drawable.outline_calendar_today_24),
-                "calendar_icon"
+                stringResource(R.string.calendar_icon)
             )
 
             Spacer(Modifier.width(8.dp))
@@ -123,7 +123,7 @@ private fun DatePickerSection(
 
             Icon(
                 painterResource(R.drawable.outline_edit_24),
-                "edit_icon"
+                stringResource(R.string.edit_icon)
             )
         }
     }
@@ -143,7 +143,7 @@ private fun AmountField(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Amount",
+                stringResource(R.string.amount),
                 style = MaterialTheme.typography.labelLarge
             )
 
@@ -151,7 +151,7 @@ private fun AmountField(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    "Rp",
+                    stringResource(R.string.currency_rp),
                     style = MaterialTheme.typography.headlineMedium
                 )
 
@@ -209,7 +209,7 @@ private fun CategorySection(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            "Category",
+            stringResource(R.string.category),
             style = MaterialTheme.typography.titleLarge
         )
 
@@ -258,7 +258,7 @@ private fun NoteField(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                "Note (optional)",
+                stringResource(R.string.note_optional),
                 style = MaterialTheme.typography.labelLarge
             )
 
@@ -288,7 +288,7 @@ private fun FooterButton(
                 modifier = modifier,
                 onClick = onAddEditButtonClick
             ) {
-                Text("Add Transaction")
+                Text(stringResource(R.string.add_transaction))
             }
         }
 
@@ -302,7 +302,7 @@ private fun FooterButton(
                     )
                 ) {
                     Text(
-                        "Delete Transaction",
+                        stringResource(R.string.delete_transaction),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -311,7 +311,7 @@ private fun FooterButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onAddEditButtonClick
                 ) {
-                    Text("Edit Transaction")
+                    Text(stringResource(R.string.edit_transaction))
                 }
             }
         }
@@ -346,7 +346,7 @@ private fun DateDialog(
                     )
                 }
             ) {
-                Text("Next")
+                Text(stringResource(R.string.next_action))
             }
         }
     ) {
@@ -381,10 +381,10 @@ private fun TimeDialog(
                     )
                 }
             ) {
-                Text("Done")
+                Text(stringResource(R.string.done_action))
             }
         },
-        title = { Text("Select time") }
+        title = { Text(stringResource(R.string.select_time)) }
     ) {
         TimePicker(timePickerState)
     }
@@ -401,19 +401,19 @@ private fun ConfirmDeleteTransactionDialog(
         modifier = modifier,
         onDismissRequest = onDismiss,
         title = {
-            Text("Are you sure?")
+            Text(stringResource(R.string.delete_transaction_confirm_title))
         },
         text = {
-            Text("You are going to delete the transaction record permanently")
+            Text(stringResource(R.string.delete_transaction_confirm_message))
         },
         confirmButton = {
             Button(onConfirm) {
-                Text("Delete")
+                Text(stringResource(R.string.delete_action))
             }
         },
         dismissButton = {
             OutlinedButton(onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel_action))
             }
         }
     )

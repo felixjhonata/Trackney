@@ -1,13 +1,17 @@
 package com.felixjhonata.trackney.home.viewmodel
 
+import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
 import com.felixjhonata.trackney.home.model.HomeUserEvent
+import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
+import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.TransactionWithCategory
 import com.felixjhonata.trackney.shared.model.entity.Category
 import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
+import com.felixjhonata.trackney.shared.util.BackupStreamResolver
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -15,12 +19,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -33,8 +39,19 @@ import java.util.Locale
 class HomeViewModelTest {
 
     private val transactionRepository: TransactionRepository = mockk()
+    private val exportBackupUseCase: ExportBackupUseCase = mockk(relaxed = true)
+    private val importBackupUseCase: ImportBackupUseCase = mockk(relaxed = true)
+    private val backupStreamResolver: BackupStreamResolver = mockk(relaxed = true)
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var originalLocale: Locale
+
+    private fun createViewModel() = HomeViewModel(
+        transactionRepository,
+        exportBackupUseCase,
+        importBackupUseCase,
+        backupStreamResolver,
+        testDispatcher
+    )
 
     @Before
     fun setUp() {
@@ -53,7 +70,7 @@ class HomeViewModelTest {
     fun testInitialStateAndDateFormatting() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = createViewModel()
 
         // Collect uiState to activate WhileSubscribed
         val states = mutableListOf<HomeUiState>()
@@ -85,7 +102,7 @@ class HomeViewModelTest {
 
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(transactions)
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -118,7 +135,7 @@ class HomeViewModelTest {
     fun testNavigationUserEvents() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -149,7 +166,7 @@ class HomeViewModelTest {
     fun testMonthNavigation() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -175,5 +192,167 @@ class HomeViewModelTest {
         assertEquals(currentLocalDate.minusMonths(1).format(formatter), viewModel.uiState.value.selectedMonthYear)
 
         collectJob.cancel()
+    }
+
+    @Test
+    fun testExportBackupSuccess() = runTest(testDispatcher) {
+        val uriString = "content://test/backup.json"
+        val outputStream = java.io.ByteArrayOutputStream()
+        
+        every { backupStreamResolver.openOutputStream(uriString) } returns outputStream
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
+        advanceUntilIdle()
+
+        io.mockk.coVerify(exactly = 1) { exportBackupUseCase.invoke(outputStream) }
+        assertTrue(events.contains(HomeUiEvent.ShowSnackbar(R.string.backup_exported_success)))
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testExportBackupFailure() = runTest(testDispatcher) {
+        val uriString = "content://test/backup.json"
+        
+        every { backupStreamResolver.openOutputStream(uriString) } throws RuntimeException("Disk full")
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
+        advanceUntilIdle()
+
+        assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.messageRes == R.string.export_failed && it.formatArg == "Disk full" })
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testImportBackupSuccess() = runTest(testDispatcher) {
+        val uriString = "content://test/backup.json"
+        val inputStream = java.io.ByteArrayInputStream(byteArrayOf())
+        
+        every { backupStreamResolver.openInputStream(uriString) } returns inputStream
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
+        advanceUntilIdle()
+
+        io.mockk.coVerify(exactly = 1) { importBackupUseCase.invoke(inputStream) }
+        assertTrue(events.contains(HomeUiEvent.ShowSnackbar(R.string.backup_imported_success)))
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testImportBackupFailure() = runTest(testDispatcher) {
+        val uriString = "content://test/backup.json"
+        
+        every { backupStreamResolver.openInputStream(uriString) } throws RuntimeException("Invalid JSON")
+        every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+
+        val states = mutableListOf<HomeUiState>()
+        val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
+        
+        val events = mutableListOf<HomeUiEvent>()
+        val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
+        runCurrent()
+
+        viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
+        advanceUntilIdle()
+
+        assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.messageRes == R.string.import_failed && it.formatArg == "Invalid JSON" })
+
+        eventJob.cancel()
+        collectJob.cancel()
+    }
+
+    @Test
+    fun testEventsBoilerplate() {
+        val uri1 = "content://test/backup.json"
+        val uri2 = "content://test/backup2.json"
+        
+        // HomeUserEvent
+        val prev = HomeUserEvent.PreviousMonth
+        val next = HomeUserEvent.NextMonth
+        val add = HomeUserEvent.AddTransactionClicked
+        val edit1 = HomeUserEvent.EditTransactionClicked(1)
+        val edit2 = HomeUserEvent.EditTransactionClicked(1)
+        val edit3 = HomeUserEvent.EditTransactionClicked(2)
+        val exp1 = HomeUserEvent.ExportData(uri1)
+        val exp2 = HomeUserEvent.ExportData(uri1)
+        val exp3 = HomeUserEvent.ExportData(uri2)
+        val imp1 = HomeUserEvent.ImportData(uri1)
+        val imp2 = HomeUserEvent.ImportData(uri1)
+        val imp3 = HomeUserEvent.ImportData(uri2)
+
+        assertEquals(prev, HomeUserEvent.PreviousMonth)
+        assertEquals(next, HomeUserEvent.NextMonth)
+        assertEquals(add, HomeUserEvent.AddTransactionClicked)
+        assertEquals(edit1, edit2)
+        assertNotEquals(edit1, edit3)
+        assertEquals(edit1.hashCode(), edit2.hashCode())
+        assertEquals("EditTransactionClicked(transactionId=1)", edit1.toString())
+        
+        assertEquals(exp1, exp2)
+        assertNotEquals(exp1, exp3)
+        assertEquals(exp1.hashCode(), exp2.hashCode())
+        assertEquals("ExportData(uri=$uri1)", exp1.toString())
+        
+        assertEquals(imp1, imp2)
+        assertNotEquals(imp1, imp3)
+        assertEquals(imp1.hashCode(), imp2.hashCode())
+        assertEquals("ImportData(uri=$uri1)", imp1.toString())
+
+        // HomeUiEvent
+        val navAdd = HomeUiEvent.NavigateToAdd
+        val navEdit1 = HomeUiEvent.NavigateToEdit(1)
+        val navEdit2 = HomeUiEvent.NavigateToEdit(1)
+        val navEdit3 = HomeUiEvent.NavigateToEdit(2)
+        val snack1 = HomeUiEvent.ShowSnackbar(1, "test")
+        val snack2 = HomeUiEvent.ShowSnackbar(1, "test")
+        val snack3 = HomeUiEvent.ShowSnackbar(2, "other")
+
+        assertEquals(navAdd, HomeUiEvent.NavigateToAdd)
+        assertEquals(navEdit1, navEdit2)
+        assertNotEquals(navEdit1, navEdit3)
+        assertEquals(navEdit1.hashCode(), navEdit2.hashCode())
+        assertEquals("NavigateToEdit(transactionId=1)", navEdit1.toString())
+        
+        assertEquals(snack1, snack2)
+        assertNotEquals(snack1, snack3)
+        assertEquals(snack1.hashCode(), snack2.hashCode())
+        assertEquals("ShowSnackbar(messageRes=1, formatArg=test)", snack1.toString())
     }
 }

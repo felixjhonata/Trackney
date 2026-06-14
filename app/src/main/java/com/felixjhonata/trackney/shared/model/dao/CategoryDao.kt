@@ -15,11 +15,18 @@ interface CategoryDao {
     @Query("SELECT * FROM categories")
     fun getAll(): Flow<List<Category>>
 
+    @Query("SELECT * FROM categories")
+    suspend fun getAllList(): List<Category>
+
+
     @Query("SELECT EXISTS(SELECT 1 FROM categories WHERE name = :name AND type = :type)")
     suspend fun existsByName(name: String, type: TransactionType): Boolean
 
+    @Query("SELECT * FROM categories WHERE name = :name AND type = :type LIMIT 1")
+    suspend fun getByNameAndType(name: String, type: TransactionType): Category?
+
     @Insert
-    suspend fun insertCategory(category: Category)
+    suspend fun insertCategory(vararg category: Category): LongArray
 
     @Update
     suspend fun updateCategory(category: Category)

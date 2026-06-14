@@ -2,14 +2,20 @@ package com.felixjhonata.trackney.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
 import com.felixjhonata.trackney.home.model.HomeUserEvent
 import com.felixjhonata.trackney.home.model.TransactionGroup
 import com.felixjhonata.trackney.home.model.TransactionItemUiState
+import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
+import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
 import com.felixjhonata.trackney.shared.model.TransactionType
+import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
+import com.felixjhonata.trackney.shared.util.BackupStreamResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,8 +37,14 @@ import kotlin.math.abs
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val exportBackupUseCase: ExportBackupUseCase,
+    private val importBackupUseCase: ImportBackupUseCase,
+    private val backupStreamResolver: BackupStreamResolver,
+    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
+    private val _isExporting = MutableStateFlow(false)
+    private val _isImporting = MutableStateFlow(false)
     private val _selectedDate = MutableStateFlow(LocalDate.now())
 
     private val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
@@ -59,8 +71,10 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         _selectedDate,
-        _transactions
-    ) { date, transactions ->
+        _transactions,
+        _isExporting,
+        _isImporting
+    ) { date, transactions, exporting, importing ->
         val income = transactions
             .filter { it.category.type == TransactionType.INCOME }
             .sumOf { it.transaction.amount }
@@ -99,7 +113,9 @@ class HomeViewModel @Inject constructor(
             totalIncome = formatAmount(income),
             totalExpense = formatAmount(expense),
             totalBalance = formatAmount(income - expense),
-            groupedTransactions = grouped
+            groupedTransactions = grouped,
+            isExporting = exporting,
+            isImporting = importing
         )
     }.stateIn(
         scope = viewModelScope,
@@ -129,6 +145,40 @@ class HomeViewModel @Inject constructor(
                 viewModelScope.launch {
                     _uiEvent.emit(HomeUiEvent.NavigateToEdit(event.transactionId))
                 }
+            }
+            is HomeUserEvent.ExportData -> performExport(event.uri)
+            is HomeUserEvent.ImportData -> performImport(event.uri)
+        }
+    }
+
+    private fun performExport(uriString: String) {
+        viewModelScope.launch(ioDispatcher) {
+            _isExporting.value = true
+            try {
+                backupStreamResolver.openOutputStream(uriString)?.use { outputStream ->
+                    exportBackupUseCase(outputStream)
+                }
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_exported_success))
+            } catch (e: Exception) {
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.export_failed, e.localizedMessage))
+            } finally {
+                _isExporting.value = false
+            }
+        }
+    }
+
+    private fun performImport(uriString: String) {
+        viewModelScope.launch(ioDispatcher) {
+            _isImporting.value = true
+            try {
+                backupStreamResolver.openInputStream(uriString)?.use { inputStream ->
+                    importBackupUseCase(inputStream)
+                }
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_imported_success))
+            } catch (e: Exception) {
+                _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.import_failed, e.localizedMessage))
+            } finally {
+                _isImporting.value = false
             }
         }
     }
