@@ -7,16 +7,18 @@ import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeFromStream
 
 class ImportBackupUseCase @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
 ) {
     @OptIn(ExperimentalSerializationApi::class)
-    suspend operator fun invoke(inputStream: InputStream) = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(inputStream: InputStream) = withContext(ioDispatcher) {
         val backupData = Json.decodeFromStream<BackupDataDto>(inputStream)
 
         val categories = backupData.categories.map {

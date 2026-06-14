@@ -1,25 +1,27 @@
 package com.felixjhonata.trackney.home.viewmodel
 
+import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
 import com.felixjhonata.trackney.home.model.HomeUserEvent
+import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
+import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
 import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.TransactionWithCategory
 import com.felixjhonata.trackney.shared.model.entity.Category
 import com.felixjhonata.trackney.shared.model.entity.Transaction
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
+import com.felixjhonata.trackney.shared.util.BackupStreamResolver
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -33,11 +35,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
-import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
-import com.felixjhonata.trackney.shared.util.BackupStreamResolver
-import com.felixjhonata.trackney.R
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
@@ -47,6 +44,14 @@ class HomeViewModelTest {
     private val backupStreamResolver: BackupStreamResolver = mockk(relaxed = true)
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var originalLocale: Locale
+
+    private fun createViewModel() = HomeViewModel(
+        transactionRepository,
+        exportBackupUseCase,
+        importBackupUseCase,
+        backupStreamResolver,
+        testDispatcher
+    )
 
     @Before
     fun setUp() {
@@ -65,7 +70,7 @@ class HomeViewModelTest {
     fun testInitialStateAndDateFormatting() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         // Collect uiState to activate WhileSubscribed
         val states = mutableListOf<HomeUiState>()
@@ -97,7 +102,7 @@ class HomeViewModelTest {
 
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(transactions)
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -130,7 +135,7 @@ class HomeViewModelTest {
     fun testNavigationUserEvents() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -161,7 +166,7 @@ class HomeViewModelTest {
     fun testMonthNavigation() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -197,7 +202,7 @@ class HomeViewModelTest {
         every { backupStreamResolver.openOutputStream(uriString) } returns outputStream
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
@@ -206,18 +211,8 @@ class HomeViewModelTest {
         val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
         runCurrent()
 
-        mockkStatic(Dispatchers::class)
-        every { Dispatchers.IO } returns testDispatcher
-        every { Dispatchers.Default } answers { callOriginal() }
-        every { Dispatchers.Main } answers { callOriginal() }
-        every { Dispatchers.Unconfined } answers { callOriginal() }
-
-        try {
-            viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
-            advanceUntilIdle()
-        } finally {
-            unmockkStatic(Dispatchers::class)
-        }
+        viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
+        advanceUntilIdle()
 
         io.mockk.coVerify(exactly = 1) { exportBackupUseCase.invoke(outputStream) }
         assertTrue(events.contains(HomeUiEvent.ShowSnackbar(R.string.backup_exported_success)))
@@ -233,7 +228,7 @@ class HomeViewModelTest {
         every { backupStreamResolver.openOutputStream(uriString) } throws RuntimeException("Disk full")
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
@@ -242,18 +237,8 @@ class HomeViewModelTest {
         val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
         runCurrent()
 
-        mockkStatic(Dispatchers::class)
-        every { Dispatchers.IO } returns testDispatcher
-        every { Dispatchers.Default } answers { callOriginal() }
-        every { Dispatchers.Main } answers { callOriginal() }
-        every { Dispatchers.Unconfined } answers { callOriginal() }
-
-        try {
-            viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
-            advanceUntilIdle()
-        } finally {
-            unmockkStatic(Dispatchers::class)
-        }
+        viewModel.onUserEvent(HomeUserEvent.ExportData(uriString))
+        advanceUntilIdle()
 
         assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.messageRes == R.string.export_failed && it.formatArg == "Disk full" })
 
@@ -269,7 +254,7 @@ class HomeViewModelTest {
         every { backupStreamResolver.openInputStream(uriString) } returns inputStream
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
@@ -278,18 +263,8 @@ class HomeViewModelTest {
         val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
         runCurrent()
 
-        mockkStatic(Dispatchers::class)
-        every { Dispatchers.IO } returns testDispatcher
-        every { Dispatchers.Default } answers { callOriginal() }
-        every { Dispatchers.Main } answers { callOriginal() }
-        every { Dispatchers.Unconfined } answers { callOriginal() }
-
-        try {
-            viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
-            advanceUntilIdle()
-        } finally {
-            unmockkStatic(Dispatchers::class)
-        }
+        viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
+        advanceUntilIdle()
 
         io.mockk.coVerify(exactly = 1) { importBackupUseCase.invoke(inputStream) }
         assertTrue(events.contains(HomeUiEvent.ShowSnackbar(R.string.backup_imported_success)))
@@ -305,7 +280,7 @@ class HomeViewModelTest {
         every { backupStreamResolver.openInputStream(uriString) } throws RuntimeException("Invalid JSON")
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, backupStreamResolver)
+        val viewModel = createViewModel()
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch { viewModel.uiState.collect { states.add(it) } }
@@ -314,18 +289,8 @@ class HomeViewModelTest {
         val eventJob = launch { viewModel.uiEvent.collect { events.add(it) } }
         runCurrent()
 
-        mockkStatic(Dispatchers::class)
-        every { Dispatchers.IO } returns testDispatcher
-        every { Dispatchers.Default } answers { callOriginal() }
-        every { Dispatchers.Main } answers { callOriginal() }
-        every { Dispatchers.Unconfined } answers { callOriginal() }
-
-        try {
-            viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
-            advanceUntilIdle()
-        } finally {
-            unmockkStatic(Dispatchers::class)
-        }
+        viewModel.onUserEvent(HomeUserEvent.ImportData(uriString))
+        advanceUntilIdle()
 
         assertTrue(events.any { it is HomeUiEvent.ShowSnackbar && it.messageRes == R.string.import_failed && it.formatArg == "Invalid JSON" })
 

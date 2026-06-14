@@ -8,17 +8,19 @@ import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import kotlinx.serialization.json.Json
 import java.io.OutputStream
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.encodeToStream
 
 class ExportBackupUseCase @Inject constructor(
     private val categoryRepository: CategoryRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
 ) {
     @OptIn(ExperimentalSerializationApi::class)
-    suspend operator fun invoke(outputStream: OutputStream) = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(outputStream: OutputStream) = withContext(ioDispatcher) {
         val categories = categoryRepository.getAllCategoriesList().map {
             CategoryBackupDto(it.id, it.name, it.type)
         }

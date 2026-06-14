@@ -15,13 +15,15 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 
+import kotlinx.coroutines.Dispatchers
+
 class BackupUseCaseTest {
 
     private val categoryRepository: CategoryRepository = mockk()
     private val transactionRepository: TransactionRepository = mockk()
 
-    private val exportBackupUseCase = ExportBackupUseCase(categoryRepository, transactionRepository)
-    private val importBackupUseCase = ImportBackupUseCase(transactionRepository)
+    private val exportBackupUseCase = ExportBackupUseCase(categoryRepository, transactionRepository, Dispatchers.IO)
+    private val importBackupUseCase = ImportBackupUseCase(transactionRepository, Dispatchers.IO)
 
     @Test
     fun exportBackupUseCase_serializesDataCorrectly() = runTest {

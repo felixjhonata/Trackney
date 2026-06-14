@@ -2,19 +2,20 @@ package com.felixjhonata.trackney.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
 import com.felixjhonata.trackney.home.model.HomeUserEvent
 import com.felixjhonata.trackney.home.model.TransactionGroup
 import com.felixjhonata.trackney.home.model.TransactionItemUiState
-import com.felixjhonata.trackney.shared.model.TransactionType
-import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
 import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
+import com.felixjhonata.trackney.shared.model.TransactionType
+import com.felixjhonata.trackney.shared.model.annotations.IoDispatchers
+import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import com.felixjhonata.trackney.shared.util.BackupStreamResolver
-import com.felixjhonata.trackney.R
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,8 @@ class HomeViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val exportBackupUseCase: ExportBackupUseCase,
     private val importBackupUseCase: ImportBackupUseCase,
-    private val backupStreamResolver: BackupStreamResolver
+    private val backupStreamResolver: BackupStreamResolver,
+    @param:IoDispatchers private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     private val _isExporting = MutableStateFlow(false)
     private val _isImporting = MutableStateFlow(false)
@@ -150,7 +152,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun performExport(uriString: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             _isExporting.value = true
             try {
                 backupStreamResolver.openOutputStream(uriString)?.use { outputStream ->
@@ -166,7 +168,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun performImport(uriString: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             _isImporting.value = true
             try {
                 backupStreamResolver.openInputStream(uriString)?.use { inputStream ->
