@@ -29,10 +29,17 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+import android.content.Context
+import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
+import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
     private val transactionRepository: TransactionRepository = mockk()
+    private val exportBackupUseCase: ExportBackupUseCase = mockk(relaxed = true)
+    private val importBackupUseCase: ImportBackupUseCase = mockk(relaxed = true)
+    private val context: Context = mockk(relaxed = true)
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var originalLocale: Locale
 
@@ -53,7 +60,7 @@ class HomeViewModelTest {
     fun testInitialStateAndDateFormatting() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
 
         // Collect uiState to activate WhileSubscribed
         val states = mutableListOf<HomeUiState>()
@@ -85,7 +92,7 @@ class HomeViewModelTest {
 
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(transactions)
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -118,7 +125,7 @@ class HomeViewModelTest {
     fun testNavigationUserEvents() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {
@@ -149,7 +156,7 @@ class HomeViewModelTest {
     fun testMonthNavigation() = runTest(testDispatcher) {
         every { transactionRepository.getTransactionsByDateRange(any(), any()) } returns flowOf(emptyList())
 
-        val viewModel = HomeViewModel(transactionRepository)
+        val viewModel = HomeViewModel(transactionRepository, exportBackupUseCase, importBackupUseCase, context)
 
         val states = mutableListOf<HomeUiState>()
         val collectJob = launch {

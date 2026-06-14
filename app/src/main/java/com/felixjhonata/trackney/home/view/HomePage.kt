@@ -26,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -36,6 +39,18 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.felixjhonata.trackney.R
 import com.felixjhonata.trackney.home.model.HomeUiEvent
 import com.felixjhonata.trackney.home.model.HomeUiState
@@ -194,8 +209,12 @@ private fun TransactionsSectionTitle(
 @Composable
 private fun TransactionTitle(
     onAdd: () -> Unit,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -203,17 +222,52 @@ private fun TransactionTitle(
     ) {
         TransactionsSectionTitle()
 
-        Button(
-            onClick = onAdd
-        ) {
-            Icon(
-                painterResource(R.drawable.outline_add_24),
-                "add_icon"
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Button(
+                onClick = onAdd
+            ) {
+                Icon(
+                    painterResource(R.drawable.outline_add_24),
+                    "add_icon"
+                )
 
-            Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(4.dp))
 
-            Text("Add")
+                Text("Add")
+            }
+
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
+                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
+                        Box(Modifier.size(4.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Export Backup") },
+                        onClick = {
+                            showMenu = false
+                            onExportBackup()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Import Backup") },
+                        onClick = {
+                            showMenu = false
+                            onImportBackup()
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -335,76 +389,109 @@ fun TransactionCard(
 private fun HomePageContent(
     uiState: HomeUiState,
     onUserEvent: (HomeUserEvent) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
-        modifier = modifier
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            item {
-                MonthPicker(
-                    uiState.selectedMonthYear,
-                    { onUserEvent(HomeUserEvent.PreviousMonth) },
-                    { onUserEvent(HomeUserEvent.NextMonth) },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-            }
-
-            item {
-                BalanceDetailCard(
-                    uiState.totalBalance,
-                    uiState.totalIncome,
-                    uiState.totalExpense,
-                    modifier = Modifier.padding(
-                        horizontal = 12.dp
-                    )
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-
-            item {
-                TransactionTitle(
-                    onAdd = { onUserEvent(HomeUserEvent.AddTransactionClicked) },
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-            }
-
-            uiState.groupedTransactions.forEach { group ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            LazyColumn {
                 item {
-                    DateCard(
-                        group.date,
-                        group.totalAmount,
-                        modifier = Modifier.padding(
-                            start = 12.dp,
-                            end = 12.dp,
-                            bottom = 12.dp
-                        )
+                    MonthPicker(
+                        uiState.selectedMonthYear,
+                        { onUserEvent(HomeUserEvent.PreviousMonth) },
+                        { onUserEvent(HomeUserEvent.NextMonth) },
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .fillMaxWidth()
                     )
+                    Spacer(Modifier.height(12.dp))
                 }
 
-                items(group.transactions) { transaction ->
-                    TransactionCard(
-                        transaction.category,
-                        transaction.time,
-                        transaction.amount,
-                        transaction.type,
-                        transaction.note,
+                item {
+                    BalanceDetailCard(
+                        uiState.totalBalance,
+                        uiState.totalIncome,
+                        uiState.totalExpense,
+                        modifier = Modifier.padding(
+                            horizontal = 12.dp
+                        )
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                item {
+                    TransactionTitle(
+                        onAdd = { onUserEvent(HomeUserEvent.AddTransactionClicked) },
+                        onExportBackup = onExportBackup,
+                        onImportBackup = onImportBackup,
                         modifier = Modifier
-                            .padding(
+                            .padding(horizontal = 12.dp)
+                            .fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                uiState.groupedTransactions.forEach { group ->
+                    item {
+                        DateCard(
+                            group.date,
+                            group.totalAmount,
+                            modifier = Modifier.padding(
                                 start = 12.dp,
                                 end = 12.dp,
                                 bottom = 12.dp
                             )
-                            .clickable { onUserEvent(HomeUserEvent.EditTransactionClicked(transaction.id)) }
-                    )
+                        )
+                    }
+
+                    items(group.transactions) { transaction ->
+                        TransactionCard(
+                            transaction.category,
+                            transaction.time,
+                            transaction.amount,
+                            transaction.type,
+                            transaction.note,
+                            modifier = Modifier
+                                .padding(
+                                    start = 12.dp,
+                                    end = 12.dp,
+                                    bottom = 12.dp
+                                )
+                                .clickable { onUserEvent(HomeUserEvent.EditTransactionClicked(transaction.id)) }
+                        )
+                    }
+                }
+            }
+
+            if (uiState.isExporting || uiState.isImporting) {
+                Dialog(
+                    onDismissRequest = {},
+                    properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(150.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = MaterialTheme.shapes.medium
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                text = if (uiState.isExporting) "Exporting..." else "Importing...",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -418,12 +505,26 @@ fun HomePage(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { viewModel.onUserEvent(HomeUserEvent.ExportData(it)) }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { viewModel.onUserEvent(HomeUserEvent.ImportData(it)) }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
                 HomeUiEvent.NavigateToAdd -> navBackStack.add(AddTransaction)
                 is HomeUiEvent.NavigateToEdit -> navBackStack.add(EditTransaction(event.transactionId))
+                is HomeUiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -431,6 +532,9 @@ fun HomePage(
     HomePageContent(
         uiState = uiState,
         onUserEvent = viewModel::onUserEvent,
+        snackbarHostState = snackbarHostState,
+        onExportBackup = { exportLauncher.launch("trackney_backup.json") },
+        onImportBackup = { importLauncher.launch(arrayOf("application/json", "application/octet-stream")) },
         modifier = modifier
     )
 }
@@ -486,7 +590,10 @@ private fun HomePagePreview() {
                     )
                 )
             ),
-            onUserEvent = {}
+            onUserEvent = {},
+            snackbarHostState = remember { SnackbarHostState() },
+            onExportBackup = {},
+            onImportBackup = {}
         )
     }
 }

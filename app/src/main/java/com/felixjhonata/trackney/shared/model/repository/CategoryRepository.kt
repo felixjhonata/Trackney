@@ -11,6 +11,7 @@ class CategoryRepository @Inject constructor(
     private val categoryDao: CategoryDao
 ) {
     fun getCategories() = categoryDao.getAll()
+    suspend fun getAllCategoriesList() = categoryDao.getAllList()
     suspend fun existsByName(name: String, type: TransactionType) = categoryDao.existsByName(name, type)
     suspend fun insertCategory(category: Category) = categoryDao.insertCategory(category)
     suspend fun deleteCategory(category: Category) = categoryDao.deleteCategory(category)

@@ -17,10 +17,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
 
+import com.felixjhonata.trackney.shared.model.dao.CategoryDao
+import com.felixjhonata.trackney.shared.model.database.TrackneyDatabase
+
 class TransactionRepositoryTest {
 
     private val transactionDao: TransactionDao = mockk(relaxed = true)
-    private val repository = TransactionRepository(transactionDao)
+    private val categoryDao: CategoryDao = mockk(relaxed = true)
+    private val database: TrackneyDatabase = mockk(relaxed = true)
+    private val repository = TransactionRepository(transactionDao, categoryDao, database)
 
     @Test
     fun insertTransaction() = runTest {
