@@ -11,7 +11,7 @@ import com.felixjhonata.trackney.shared.model.TransactionType
 import com.felixjhonata.trackney.shared.model.repository.TransactionRepository
 import com.felixjhonata.trackney.shared.domain.ExportBackupUseCase
 import com.felixjhonata.trackney.shared.domain.ImportBackupUseCase
-import com.felixjhonata.trackney.shared.util.BackupStreamProvider
+import com.felixjhonata.trackney.shared.util.BackupStreamResolver
 import com.felixjhonata.trackney.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val exportBackupUseCase: ExportBackupUseCase,
     private val importBackupUseCase: ImportBackupUseCase,
-    private val backupStreamProvider: BackupStreamProvider
+    private val backupStreamResolver: BackupStreamResolver
 ) : ViewModel() {
     private val _isExporting = MutableStateFlow(false)
     private val _isImporting = MutableStateFlow(false)
@@ -149,11 +149,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun performExport(uri: android.net.Uri) {
+    private fun performExport(uriString: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _isExporting.value = true
             try {
-                backupStreamProvider.openOutputStream(uri)?.use { outputStream ->
+                backupStreamResolver.openOutputStream(uriString)?.use { outputStream ->
                     exportBackupUseCase(outputStream)
                 }
                 _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_exported_success))
@@ -165,11 +165,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun performImport(uri: android.net.Uri) {
+    private fun performImport(uriString: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _isImporting.value = true
             try {
-                backupStreamProvider.openInputStream(uri)?.use { inputStream ->
+                backupStreamResolver.openInputStream(uriString)?.use { inputStream ->
                     importBackupUseCase(inputStream)
                 }
                 _uiEvent.emit(HomeUiEvent.ShowSnackbar(R.string.backup_imported_success))

@@ -1,6 +1,5 @@
 package com.felixjhonata.trackney.home.model
 
-import android.net.Uri
 import androidx.annotation.StringRes
 import com.felixjhonata.trackney.shared.model.TransactionType
 
@@ -35,8 +34,8 @@ sealed interface HomeUserEvent {
     data object NextMonth : HomeUserEvent
     data object AddTransactionClicked : HomeUserEvent
     data class EditTransactionClicked(val transactionId: Int) : HomeUserEvent
-    data class ExportData(val uri: Uri) : HomeUserEvent
-    data class ImportData(val uri: Uri) : HomeUserEvent
+    data class ExportData(val uri: String) : HomeUserEvent
+    data class ImportData(val uri: String) : HomeUserEvent
 }
 
 sealed interface HomeUiEvent {

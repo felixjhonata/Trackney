@@ -624,13 +624,13 @@ fun HomePage(
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
-        uri?.let { viewModel.onUserEvent(HomeUserEvent.ExportData(it)) }
+        uri?.let { viewModel.onUserEvent(HomeUserEvent.ExportData(it.toString())) }
     }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.onUserEvent(HomeUserEvent.ImportData(it)) }
+        uri?.let { viewModel.onUserEvent(HomeUserEvent.ImportData(it.toString())) }
     }
 
     val exportSuccess = stringResource(R.string.backup_exported_success)

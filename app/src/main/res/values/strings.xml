@@ -19,8 +19,8 @@
     <string name="edit_button">Edit button</string>
     <string name="delete_button">Delete button</string>
     <string name="back_button">Back button</string>
-    <string name="previous_month_desc">previous_month</string>
-    <string name="next_month_desc">after_month</string>
+    <string name="previous_month_desc">Previous Month</string>
+    <string name="next_month_desc">Next Month</string>
     <string name="dollar_icon">dollar_icon</string>
 
     <!-- Home Screen -->
